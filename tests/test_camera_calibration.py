@@ -17,7 +17,7 @@ from camera import Camera  # nopep8
 CALIBRATION_IMAGES_DIR = "../camera_cal/"
 
 ROAD_IMAGES_DIR = "../test_images/"
-TEST_OUTPUT_DIR = "test_output"
+TEST_OUTPUT_DIR = "test_camera_calibration_output"
 
 
 def get_images_from_dir(path):
