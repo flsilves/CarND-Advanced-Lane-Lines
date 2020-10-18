@@ -43,7 +43,7 @@ def save_before_and_after_image(before_img, after_img, save_file):
     width_inches = int(2*before_img.shape[1]) / image_dpi
     height_inches = int(2*before_img.shape[0]) / image_dpi
 
-    logging.info("width %f height:%f", width_inches, height_inches)
+    logging.debug("width %f height:%f", width_inches, height_inches)
     figsize = (width_inches, height_inches)
 
     figure, (ax1, ax2) = plt.subplots(
@@ -60,6 +60,8 @@ def save_before_and_after_image(before_img, after_img, save_file):
     figure.savefig(save_file, dpi='figure',
                    bbox_inches='tight')
 
+    plt.close('all')
+
 
 class CameraCalibrationTest(unittest.TestCase):
     def setUp(self):
@@ -67,8 +69,6 @@ class CameraCalibrationTest(unittest.TestCase):
         calibration_images = glob.glob('../camera_cal/calibration*.jpg')
         self.camera = Camera(nx=9, ny=6, calibration_images=calibration_images,
                              calibration_filename='../calibration.pickle')
-        if not os.path.exists(TEST_OUTPUT_DIR):
-            os.makedirs(TEST_OUTPUT_DIR)
 
     def tearDown(self):
         return
@@ -78,7 +78,7 @@ class CameraCalibrationTest(unittest.TestCase):
         logging.info("Undistorting test images")
 
         for idx, test_image in enumerate(test_images):
-            logging.info("Image %d", idx)
+            logging.debug("Image %d", idx)
             undistorted_image = self.camera.undistort_image(test_image)
 
             filename = f"{TEST_OUTPUT_DIR}/road_{str(idx)}_undistorted.png"
@@ -90,7 +90,7 @@ class CameraCalibrationTest(unittest.TestCase):
         logging.info("Undistorting calibration images")
 
         for idx, test_image in enumerate(test_images):
-            logging.info("Image %d", idx)
+            logging.debug("Image %d", idx)
             undistorted_image = self.camera.undistort_image(test_image)
 
             filename = f"{TEST_OUTPUT_DIR}/calibration{str(idx)}_undistorted.png"
@@ -99,4 +99,12 @@ class CameraCalibrationTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    if not os.path.exists(TEST_OUTPUT_DIR):
+        os.makedirs(TEST_OUTPUT_DIR)
+    else:
+        files = glob.glob(f'{TEST_OUTPUT_DIR}/*.png')
+        logging.info("Deleting %d images from previous run", len(files))
+        for f in files:
+            os.remove(f)
+
     unittest.main()
