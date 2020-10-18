@@ -30,17 +30,20 @@ class CameraModel:
     """Computes objpoints, imgpoints pair based on chessboard images for calibration"""
 
     def __init__(self, nx, ny, calibration_images, calibration_filename):
+        logging.info('Initializing camera model...')
         self.calibration_images = calibration_images
         self.calibration_file = PickleFile(calibration_filename)
         self.image_shape = self.get_shape(self.calibration_images[0])
         self.corner_images = []
+        self.undistorted_images = []
         self.image_names = []
-        self.calibration = []
+        self.calibration = {}
         self.nx = nx
         self.ny = ny
         logging.info('Camera image shape x:%d y:%d',
                      self.image_shape[0], self.image_shape[1])
 
+        self.get_calibration_filenames_()
         self.calibrate()
 
     def get_shape(self, image_filename):
@@ -48,17 +51,18 @@ class CameraModel:
         shape = cv2.imread(image_filename).shape
         return (shape[1], shape[0])
 
-    def save_calibration_file(self, ret, mtx, dist, rvecs, tvecs):
+    def get_calibration_filenames_(self):
+        """ Get basename of all calibration images, just to display in plot's title """
+        for filename in self.calibration_images:
+            self.image_names.append(os.path.basename(filename))
+
+    def save_calibration_file(self):
         """ Save calibration file """
-        data = {'ret': ret, 'mtx': mtx, 'dist': dist,
-                'rvecs': rvecs, 'tvecs': tvecs}
-        self.calibration_file.save(data)
+        self.calibration_file.save(self.calibration)
 
     def load_calibration_file(self):
         """ Load calibration file """
-        data = self.calibration_file.load()
-        self.calibration = [data['ret'], data['mtx'],
-                            data['dist'], data['rvecs'], data['tvecs']]
+        self.calibration = self.calibration_file.load()
 
     def calibrate(self):
         """ Get all imgpoints """
@@ -89,9 +93,10 @@ class CameraModel:
             ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
                 objpoints, imgpoints, self.image_shape, None, None)
 
-            self.calibration = [ret, mtx, dist, rvecs, tvecs]
+            self.calibration = {'ret': ret, 'mtx': mtx, 'dist': dist,
+                                'rvecs': rvecs, 'tvecs': tvecs}
 
-            self.save_calibration_file(ret, mtx, dist, rvecs, tvecs)
+            self.save_calibration_file()
 
     def find_corners(self, filename):
         """ Append objectpoints/imgpoints from a single chessboard image """
@@ -116,25 +121,42 @@ class CameraModel:
             )
             return
 
-    def show_calibration_images(self, cols=4, rows=5):
-        """ Display calibration images """
+    def show_corner_images(self, save_file='chessboard_identified_corners.png'):
+        """ Plot chessboard images with identified corners"""
+        logging.info("Plotting calibration images with corners")
+        self.show_images_(self.corner_images, self.image_names, save_file)
 
+    def show_undistorted_images(self, save_file='chessboard_undistorted.png'):
+        """ Plot chessboard images after undistorting them"""
+        logging.info("Plotting undistorted images")
+        self.undistort_calibration_images_()
+        self.show_images_(self.undistorted_images,
+                          self.image_names, save_file)
+
+    def show_images_(self, images, titles, save_file, cols=4, rows=5):
+        """ Display calibration images """
         figure, axes = plt.subplots(
             rows, cols, figsize=(15, 10), frameon=False)
 
+        logging.info("Displaying %d images", len(images))
         for index, sub in enumerate(axes.flat):
             sub.axis('off')
-            sub.set_title(self.image_names[index], fontsize=9)
-            sub.imshow(self.corner_images[index])
+            sub.set_title(titles[index], fontsize=9)
+            sub.imshow(images[index])
 
         plt.tight_layout()
         plt.show()
 
-        figure.savefig('chessboard_identified_corners.png', dpi='figure')
+        figure.savefig(save_file, dpi='figure')
 
-    def undistort(self, filename):
+    def undistort(self, img):
         """ Return undistorted image """
-        cv2.undistort(img, self.mtx, self.dist)
+        return cv2.undistort(img, self.calibration['mtx'], self.calibration['dist'])
+
+    def undistort_calibration_images_(self):
+        for calibration_image in self.calibration_images:
+            bgr_image = cv2.imread(calibration_image)
+            self.undistorted_images.append(self.undistort(bgr_image))
 
 
 def main():
@@ -143,9 +165,8 @@ def main():
 
     c = CameraModel(nx=9, ny=6, calibration_images=calibration_images,
                     calibration_filename='calibration.pickle')
-    # c.calibrate()
-    # c.show_calibration_images()
-    # ProcessProjectVideo(subclip_seconds=None)
+
+    c.show_undistorted_images()
 
 
 if __name__ == "__main__":
