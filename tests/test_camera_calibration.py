@@ -26,19 +26,18 @@ def get_images_from_dir(path):
     image_list = []
     for filename in glob.glob(f'{path}/*.jpg'):
         jpg_image = cv2.imread(filename)
+        jpg_image = cv2.cvtColor(jpg_image, cv2.COLOR_BGR2RGB)
         image_list.append(jpg_image)
 
     for filename in glob.glob(f'{path}/*.png'):
         png_image = cv2.imread(filename)
+        png_image = cv2.cvtColor(png_image, cv2.COLOR_BGR2RGB)
         image_list.append(png_image)
 
     return image_list
 
 
 def save_before_and_after_image(before_img, after_img, save_file):
-
-    before_img = cv2.cvtColor(before_img, cv2.COLOR_BGR2RGB)
-    after_img = cv2.cvtColor(after_img, cv2.COLOR_BGR2RGB)
 
     image_dpi = 72
 
@@ -100,7 +99,7 @@ class CameraCalibrationTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, undistorted_image, filename)
 
-    def Xtest_threshold_road_images(self):
+    def xtest_threshold_road_images(self):
         test_images = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info("Applying threshold on road images")
 
@@ -108,26 +107,12 @@ class CameraCalibrationTest(unittest.TestCase):
             logging.debug("Image %d", idx)
 
             undistorted_image = self.camera.undistort_image(test_image)
-            ksize = 3  # Choose a larger odd number to smooth gradient measurements
 
-            # Apply each of the thresholding functions
-            gradx = abs_sobel_thresh(
-                undistorted_image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
-            grady = abs_sobel_thresh(
-                undistorted_image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
-            mag_binary = mag_thresh(
-                undistorted_image, sobel_kernel=ksize, mag_thresh=(30, 170))
-            dir_binary = dir_threshold(
-                undistorted_image, sobel_kernel=ksize, thresh=(0, np.pi/2))
-            s_binary = hls_select(undistorted_image, thresh=(90, 255))
-
-            combined = np.zeros_like(dir_binary)
-            combined[((gradx == 1) & (grady == 1)) | (
-                (mag_binary == 1) & (dir_binary == 1)) | (s_binary == 1)] = 1
-
+            edge_detector = EdgeDetector()
+            edges = edge_detector.detect(undistorted_image)
             filename = f"{TEST_OUTPUT_DIR}/threshold_{str(idx)}_undistorted.png"
             save_before_and_after_image(
-                test_image, combined, filename)
+                test_image, edges, filename)
 
 
 if __name__ == '__main__':
