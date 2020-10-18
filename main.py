@@ -29,20 +29,19 @@ class PickleFile:
 class CameraModel:
     """Computes objpoints, imgpoints pair based on chessboard images for calibration"""
 
-    objpoints = []  # 3d points in real world space.
-    imgpoints = []  # 2d points in image plane.
-    corner_images = []
-    image_names = []
-    nx = 9
-    ny = 6
-
-    def __init__(self):
-        self.calibration_images = glob.glob('camera_cal/calibration*.jpg')
-        self.calibration_file = PickleFile('calibration.pickle')
+    def __init__(self, nx, ny, calibration_images, calibration_filename):
+        self.calibration_images = calibration_images
+        self.calibration_file = PickleFile(calibration_filename)
         self.image_shape = self.get_shape(self.calibration_images[0])
-
+        self.corner_images = []
+        self.image_names = []
+        self.calibration = []
+        self.nx = nx
+        self.ny = ny
         logging.info('Camera image shape x:%d y:%d',
                      self.image_shape[0], self.image_shape[1])
+
+        self.calibrate()
 
     def get_shape(self, image_filename):
         """ Get shape of camera images """
@@ -58,7 +57,8 @@ class CameraModel:
     def load_calibration_file(self):
         """ Load calibration file """
         data = self.calibration_file.load()
-        return data['ret'], data['mtx'], data['dist'], data['rvecs'], data['tvecs']
+        self.calibration = [data['ret'], data['mtx'],
+                            data['dist'], data['rvecs'], data['tvecs']]
 
     def calibrate(self):
         """ Get all imgpoints """
@@ -66,7 +66,8 @@ class CameraModel:
         if self.calibration_file.exists():
             logging.info('Loading calibration file: "%s"',
                          self.calibration_file.filename)
-            ret, mtx, dist, rvecs, tvecs = self.load_calibration_file()
+
+            self.load_calibration_file()
 
         else:
             logging.info('No calibration file available, calibrating...')
@@ -74,38 +75,46 @@ class CameraModel:
             objp = np.zeros((self.nx * self.ny, 3), np.float32)
             objp[:, :2] = np.mgrid[0: self.nx, 0: self.ny].T.reshape(-1, 2)
 
+            objpoints = []
+            imgpoints = []
+
             for filename in self.calibration_images:
                 logging.info('Finding corners in: "%s"', filename)
-                self.find_corners(filename, objp)
+                imgp = self.find_corners(filename)
+
+                if imgp is not None:
+                    objpoints.append(objp)
+                    imgpoints.append(imgp)
 
             ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
-                self.objpoints, self.imgpoints, self.image_shape, None, None)
+                objpoints, imgpoints, self.image_shape, None, None)
+
+            self.calibration = [ret, mtx, dist, rvecs, tvecs]
 
             self.save_calibration_file(ret, mtx, dist, rvecs, tvecs)
 
-    def find_corners(self, filename, objp):
+    def find_corners(self, filename):
         """ Append objectpoints/imgpoints from a single chessboard image """
 
         bgr_image = cv2.imread(filename)
 
         gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
 
-        corners_found, corners = cv2.findChessboardCorners(
+        retval, corners = cv2.findChessboardCorners(
             gray_image, (self.nx, self.ny), None)
 
         chessboard_corners = cv2.drawChessboardCorners(
-            bgr_image, (self.nx, self.ny), corners, corners_found)
+            bgr_image, (self.nx, self.ny), corners, retval)
 
         self.corner_images.append(chessboard_corners)
-        self.image_names.append(os.path.basename(filename))
 
-        if corners_found:
-            self.objpoints.append(objp)
-            self.imgpoints.append(corners)
+        if retval:
+            return corners
         else:
             logging.warning(
                 "Unable to find corners in: %s", filename
             )
+            return
 
     def show_calibration_images(self, cols=4, rows=5):
         """ Display calibration images """
@@ -123,11 +132,18 @@ class CameraModel:
 
         figure.savefig('chessboard_identified_corners.png', dpi='figure')
 
+    def undistort(self, filename):
+        """ Return undistorted image """
+        cv2.undistort(img, self.mtx, self.dist)
+
 
 def main():
     logging.basicConfig(level=logging.INFO, format='%(message)s')
-    c = CameraModel()
-    c.calibrate()
+    calibration_images = glob.glob('camera_cal/calibration*.jpg')
+
+    c = CameraModel(nx=9, ny=6, calibration_images=calibration_images,
+                    calibration_filename='calibration.pickle')
+    # c.calibrate()
     # c.show_calibration_images()
     # ProcessProjectVideo(subclip_seconds=None)
 
