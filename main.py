@@ -12,7 +12,7 @@ import re
 
 class CalibrationFile:
     def __init__(self, filename):
-        self.filename = "camera_cal/" + filename
+        self.filename = filename
 
     def exists(self):
         return os.path.isfile(self.filename)
@@ -30,7 +30,6 @@ class CameraModel:
 
     objpoints = []  # 3d points in real world space.
     imgpoints = []  # 2d points in image plane.
-    images = []  # images from which these points where computed.
 
     cal_w = None
     cal_h = None
@@ -40,51 +39,56 @@ class CameraModel:
     def __init__(self):
         self.nx = 9
         self.ny = 6
-        self.target_images = glob.glob("camera_cal/calibration*.jpg")
+        self.calibration_images = glob.glob("camera_cal/calibration*.jpg")
+        self.corner_images = []
+        self.calibration_file = CalibrationFile("camera_cal/calibration.p")
 
-        self.calibration_file = CalibrationFile("calibration.p")
-
-    def save(self):
+    def save_calibration_file(self):
         data = dict()
         data["objpoints"] = self.objpoints
         data["imgpoints"] = self.imgpoints
-        data["images"] = self.images
         self.calibration_file.save(data)
 
     def load_calibration_file(self):
+        "Load calibration file if it exists"
         if self.calibration_file.exists():
             data = self.calibration_file.load()
             self.objpoints = data["objpoints"]
             self.imgpoints = data["imgpoints"]
-            self.images = data["images"]
             return True
         else:
             return False
 
     def calibrate(self):
         """ Get all imgpoints"""
-        if self.load_calibration_file():
-            return
+        # if self.load_calibration_file():
+        #    return
 
         objp = np.zeros((self.nx * self.ny, 3), np.float32)
         objp[:, :2] = np.mgrid[0: self.nx, 0: self.ny].T.reshape(-1, 2)
 
-        for image in self.target_images:
-            self.calibrate_single(image, objp)
+        for filename in self.calibration_images:
+            self.calibrate_single(filename, objp)
 
-        self.save()
+        self.save_calibration_file()
 
     def calibrate_single(self, filename, objp):
         """ Obtain objpoint and imgpoints from a single chessboard image """
         logging.info('file: %s', filename)
 
-        img = cv2.imread(filename)
+        bgr_image = cv2.imread(filename)
+
+        gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
 
         corners_found, corners = cv2.findChessboardCorners(
-            cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (self.nx, self.ny), None)
+            gray_image, (self.nx, self.ny), None)
+
+        chessboard_corners = cv2.drawChessboardCorners(
+            bgr_image, (self.nx, self.ny), corners, corners_found)
+
+        self.corner_images.append(chessboard_corners)
 
         if corners_found:
-            self.images.append(filename)
             self.objpoints.append(objp)
             self.imgpoints.append(corners)
         else:
