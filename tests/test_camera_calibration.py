@@ -9,10 +9,12 @@ import os
 import cv2
 import matplotlib.pyplot as plt
 import logging
+import numpy as np
 
 
 sys.path.append("..")  # nopep8
 from camera import Camera  # nopep8
+from threshold import *  # nopep8
 
 CALIBRATION_IMAGES_DIR = "../camera_cal/"
 
@@ -49,6 +51,7 @@ def save_before_and_after_image(before_img, after_img, save_file):
     figure, (ax1, ax2) = plt.subplots(
         1, 2, figsize=figsize, dpi=image_dpi, frameon=False)
 
+    figure.tight_layout()
     ax1.imshow(before_img)
     ax1.axis('off')
     ax1.set_title("original", fontsize=25)
@@ -93,12 +96,43 @@ class CameraCalibrationTest(unittest.TestCase):
             logging.debug("Image %d", idx)
             undistorted_image = self.camera.undistort_image(test_image)
 
-            filename = f"{TEST_OUTPUT_DIR}/calibration{str(idx)}_undistorted.png"
+            filename = f"{TEST_OUTPUT_DIR}/calibration_{str(idx)}_undistorted.png"
             save_before_and_after_image(
                 test_image, undistorted_image, filename)
 
+    def Xtest_threshold_road_images(self):
+        test_images = get_images_from_dir(ROAD_IMAGES_DIR)
+        logging.info("Applying threshold on road images")
+
+        for idx, test_image in enumerate(test_images):
+            logging.debug("Image %d", idx)
+
+            undistorted_image = self.camera.undistort_image(test_image)
+            ksize = 3  # Choose a larger odd number to smooth gradient measurements
+
+            # Apply each of the thresholding functions
+            gradx = abs_sobel_thresh(
+                undistorted_image, orient='x', sobel_kernel=ksize, thresh=(20, 100))
+            grady = abs_sobel_thresh(
+                undistorted_image, orient='y', sobel_kernel=ksize, thresh=(20, 100))
+            mag_binary = mag_thresh(
+                undistorted_image, sobel_kernel=ksize, mag_thresh=(30, 170))
+            dir_binary = dir_threshold(
+                undistorted_image, sobel_kernel=ksize, thresh=(0, np.pi/2))
+            s_binary = hls_select(undistorted_image, thresh=(90, 255))
+
+            combined = np.zeros_like(dir_binary)
+            combined[((gradx == 1) & (grady == 1)) | (
+                (mag_binary == 1) & (dir_binary == 1)) | (s_binary == 1)] = 1
+
+            filename = f"{TEST_OUTPUT_DIR}/threshold_{str(idx)}_undistorted.png"
+            save_before_and_after_image(
+                test_image, combined, filename)
+
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
+
     if not os.path.exists(TEST_OUTPUT_DIR):
         os.makedirs(TEST_OUTPUT_DIR)
     else:
