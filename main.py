@@ -21,8 +21,7 @@ class CalibrationFile:
         pickle.dump(data, open(self.filename, "w+b"))
 
     def load(self):
-        data = pickle.load(open(self.filename, "r+b"))
-        return data
+        return pickle.load(open(self.filename, "r+b"))
 
 
 class CameraModel:
@@ -31,51 +30,59 @@ class CameraModel:
     objpoints = []  # 3d points in real world space.
     imgpoints = []  # 2d points in image plane.
 
-    cal_w = None
-    cal_h = None
-    mtx = None
-    dist = None
-
     def __init__(self):
         self.nx = 9
         self.ny = 6
         self.calibration_images = glob.glob("camera_cal/calibration*.jpg")
+        self.calibration_file = CalibrationFile("camera_cal/calibration.p")
+        self.image_shape = self.get_shape(self.calibration_images[0])
+
         self.corner_images = []
         self.image_names = []
-        self.calibration_file = CalibrationFile("camera_cal/calibration.p")
 
-    def save_calibration_file(self):
-        data = dict()
-        data["objpoints"] = self.objpoints
-        data["imgpoints"] = self.imgpoints
+        logging.info('Camera image shape x:%d y:%d',
+                     self.image_shape[0], self.image_shape[1])
+
+    def get_shape(self, img):
+        shape = cv2.imread(img).shape
+        return (shape[1], shape[0])
+
+    def save_calibration_file(self, ret, mtx, dist, rvecs, tvecs):
+        """ Save calibration file """
+        data = {'ret': ret, 'mtx': mtx, 'dist': dist,
+                'rvecs': rvecs, 'tvecs': tvecs}
         self.calibration_file.save(data)
 
     def load_calibration_file(self):
-        "Load calibration file if it exists"
-        if self.calibration_file.exists():
-            data = self.calibration_file.load()
-            self.objpoints = data["objpoints"]
-            self.imgpoints = data["imgpoints"]
-            return True
-        else:
-            return False
+        """ Load calibration file """
+        data = self.calibration_file.load()
+        return data['ret'], data['mtx'], data['dist'], data['rvecs'], data['tvecs']
 
     def calibrate(self):
         """ Get all imgpoints"""
-        # if self.load_calibration_file():
-        #    return
 
-        objp = np.zeros((self.nx * self.ny, 3), np.float32)
-        objp[:, :2] = np.mgrid[0: self.nx, 0: self.ny].T.reshape(-1, 2)
+        if self.calibration_file.exists():
+            logging.info('Loading calibration file: "%s"',
+                         self.calibration_file.filename)
+            ret, mtx, dist, rvecs, tvecs = self.load_calibration_file()
 
-        for filename in self.calibration_images:
-            self.calibrate_single(filename, objp)
+        else:
+            logging.info('No calibration file available, calibrating...')
 
-        self.save_calibration_file()
+            objp = np.zeros((self.nx * self.ny, 3), np.float32)
+            objp[:, :2] = np.mgrid[0: self.nx, 0: self.ny].T.reshape(-1, 2)
 
-    def calibrate_single(self, filename, objp):
+            for filename in self.calibration_images:
+                logging.info('Finding corners in: %s', filename)
+                self.find_corners(filename, objp)
+
+            ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
+                self.objpoints, self.imgpoints, self.image_shape, None, None)
+
+            self.save_calibration_file(ret, mtx, dist, rvecs, tvecs)
+
+    def find_corners(self, filename, objp):
         """ Obtain objpoint and imgpoints from a single chessboard image """
-        logging.info('file: %s', filename)
 
         bgr_image = cv2.imread(filename)
 
@@ -100,21 +107,27 @@ class CameraModel:
 
     def show_calibration_images(self, cols=4, rows=5):
         """ Display calibration images in a subplot grid """
-        fig, axes = plt.subplots(rows, cols)
+
+        figure, axes = plt.subplots(
+            rows, cols, figsize=(15, 10), frameon=False)
 
         for index, sub in enumerate(axes.flat):
             sub.axis('off')
-            sub.set_title(self.image_names[index])
+            sub.set_title(self.image_names[index], fontsize=9)
             sub.imshow(self.corner_images[index])
+
+        plt.tight_layout()
         plt.show()
+
+        figure.savefig('chessboard_identified_corners.png', dpi='figure')
 
 
 def main():
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.INFO)
 
     c = CameraModel()
     c.calibrate()
-    c.show_calibration_images()
+    # c.show_calibration_images()
     # ProcessProjectVideo(subclip_seconds=None)
 
 
