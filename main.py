@@ -10,7 +10,9 @@ import cProfile
 import re
 
 
-class CalibrationFile:
+class PickleFile:
+    """ Utility class to load/save pickle file"""
+
     def __init__(self, filename):
         self.filename = filename
 
@@ -29,22 +31,22 @@ class CameraModel:
 
     objpoints = []  # 3d points in real world space.
     imgpoints = []  # 2d points in image plane.
+    corner_images = []
+    image_names = []
+    nx = 9
+    ny = 6
 
     def __init__(self):
-        self.nx = 9
-        self.ny = 6
-        self.calibration_images = glob.glob("camera_cal/calibration*.jpg")
-        self.calibration_file = CalibrationFile("camera_cal/calibration.p")
+        self.calibration_images = glob.glob('camera_cal/calibration*.jpg')
+        self.calibration_file = PickleFile('calibration.pickle')
         self.image_shape = self.get_shape(self.calibration_images[0])
-
-        self.corner_images = []
-        self.image_names = []
 
         logging.info('Camera image shape x:%d y:%d',
                      self.image_shape[0], self.image_shape[1])
 
-    def get_shape(self, img):
-        shape = cv2.imread(img).shape
+    def get_shape(self, image_filename):
+        """ Get shape of camera images """
+        shape = cv2.imread(image_filename).shape
         return (shape[1], shape[0])
 
     def save_calibration_file(self, ret, mtx, dist, rvecs, tvecs):
@@ -59,7 +61,7 @@ class CameraModel:
         return data['ret'], data['mtx'], data['dist'], data['rvecs'], data['tvecs']
 
     def calibrate(self):
-        """ Get all imgpoints"""
+        """ Get all imgpoints """
 
         if self.calibration_file.exists():
             logging.info('Loading calibration file: "%s"',
@@ -73,7 +75,7 @@ class CameraModel:
             objp[:, :2] = np.mgrid[0: self.nx, 0: self.ny].T.reshape(-1, 2)
 
             for filename in self.calibration_images:
-                logging.info('Finding corners in: %s', filename)
+                logging.info('Finding corners in: "%s"', filename)
                 self.find_corners(filename, objp)
 
             ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
@@ -82,7 +84,7 @@ class CameraModel:
             self.save_calibration_file(ret, mtx, dist, rvecs, tvecs)
 
     def find_corners(self, filename, objp):
-        """ Obtain objpoint and imgpoints from a single chessboard image """
+        """ Append objectpoints/imgpoints from a single chessboard image """
 
         bgr_image = cv2.imread(filename)
 
@@ -106,7 +108,7 @@ class CameraModel:
             )
 
     def show_calibration_images(self, cols=4, rows=5):
-        """ Display calibration images in a subplot grid """
+        """ Display calibration images """
 
         figure, axes = plt.subplots(
             rows, cols, figsize=(15, 10), frameon=False)
@@ -123,8 +125,7 @@ class CameraModel:
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
-
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     c = CameraModel()
     c.calibrate()
     # c.show_calibration_images()
