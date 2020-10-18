@@ -21,10 +21,12 @@ class PickleFile:
         return os.path.isfile(self.filename)
 
     def save(self, data):
-        pickle.dump(data, open(self.filename, "w+b"))
+        with open(self.filename, 'wb') as file_handle:
+            pickle.dump(obj=data, file=file_handle)
 
     def load(self):
-        return pickle.load(open(self.filename, "r+b"))
+        with open(self.filename, 'rb') as file_handle:
+            return pickle.load(file=file_handle)
 
 
 class Camera:
