@@ -41,6 +41,7 @@ class CameraModel:
         self.ny = 6
         self.calibration_images = glob.glob("camera_cal/calibration*.jpg")
         self.corner_images = []
+        self.image_names = []
         self.calibration_file = CalibrationFile("camera_cal/calibration.p")
 
     def save_calibration_file(self):
@@ -87,6 +88,7 @@ class CameraModel:
             bgr_image, (self.nx, self.ny), corners, corners_found)
 
         self.corner_images.append(chessboard_corners)
+        self.image_names.append(os.path.basename(filename))
 
         if corners_found:
             self.objpoints.append(objp)
@@ -96,13 +98,23 @@ class CameraModel:
                 "Unable to find corners in: %s", filename
             )
 
+    def show_calibration_images(self, cols=4, rows=5):
+        """ Display calibration images in a subplot grid """
+        fig, axes = plt.subplots(rows, cols)
+
+        for index, sub in enumerate(axes.flat):
+            sub.axis('off')
+            sub.set_title(self.image_names[index])
+            sub.imshow(self.corner_images[index])
+        plt.show()
+
 
 def main():
-
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING)
 
     c = CameraModel()
     c.calibrate()
+    c.show_calibration_images()
     # ProcessProjectVideo(subclip_seconds=None)
 
 
