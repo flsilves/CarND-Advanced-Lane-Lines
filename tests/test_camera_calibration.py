@@ -3,13 +3,13 @@ Unit tests for camera calibration
 """
 
 import unittest
+import logging
 import sys
 import glob
 import os
-import cv2
 import matplotlib.pyplot as plt
-import logging
-import numpy as np
+import cv2
+from utils import *
 
 
 sys.path.append("..")  # nopep8
