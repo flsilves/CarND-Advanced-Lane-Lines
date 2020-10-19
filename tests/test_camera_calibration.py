@@ -9,7 +9,7 @@ import glob
 import os
 import matplotlib.pyplot as plt
 import cv2
-from utils import *
+from test_utils import *
 
 
 sys.path.append("..")  # nopep8
