@@ -18,7 +18,7 @@ class ImageThresholdTest(unittest.TestCase):
     def tearDown(self):
         return
 
-    def xtest_threshold_road_images(self):
+    def test_threshold_images(self):
         test_images = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying threshold on road images')
 
@@ -27,11 +27,11 @@ class ImageThresholdTest(unittest.TestCase):
 
             undistorted_image = self.camera.undistort_image(test_image)
 
-            edge_detector = EdgeDetector()
-            edges = edge_detector.detect(undistorted_image)
-            filename = f'{TEST_OUTPUT_DIR}/threshold_{str(idx)}_undistorted.png'
+            #edge_detector = EdgeDetector()
+            #edges = edge_detector.detect(undistorted_image)
+            filename = f'{TEST_OUTPUT_DIR}/threshold_{str(idx)}.png'
             save_before_and_after_image(
-                test_image, edges, filename)
+                test_image, test_image, filename)
 
 
 if __name__ == '__main__':

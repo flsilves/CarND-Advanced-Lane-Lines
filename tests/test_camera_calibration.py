@@ -19,26 +19,27 @@ class CameraCalibrationTest(unittest.TestCase):
         return
 
     def test_undistort_road_images(self):
-        test_images = get_images_from_dir(ROAD_IMAGES_DIR)
+        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Undistorting test images')
 
         for idx, test_image in enumerate(test_images):
-            logging.debug("Image %d", idx)
+            logging.debug('Image %d', idx)
             undistorted_image = self.camera.undistort_image(test_image)
 
-            filename = f'{TEST_OUTPUT_DIR}/road_{str(idx)}_undistorted.png'
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_undistort.png'
             save_before_and_after_image(
                 test_image, undistorted_image, filename)
 
     def test_undistort_calibration_images(self):
-        test_images = get_images_from_dir(CALIBRATION_IMAGES_DIR)
+        test_images, filenames = get_images_from_dir(CALIBRATION_IMAGES_DIR)
         logging.info('Undistorting calibration images')
 
         for idx, test_image in enumerate(test_images):
             logging.debug('Image %d', idx)
             undistorted_image = self.camera.undistort_image(test_image)
 
-            filename = f'{TEST_OUTPUT_DIR}/calibration_{str(idx)}_undistorted.png'
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_undistort.png'
+
             save_before_and_after_image(
                 test_image, undistorted_image, filename)
 

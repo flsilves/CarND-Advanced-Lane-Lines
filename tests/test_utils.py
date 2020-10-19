@@ -9,6 +9,7 @@ import sys
 import os
 import matplotlib.pyplot as plt
 import cv2
+from pathlib import Path
 
 
 sys.path.append('..')  # nopep8
@@ -34,17 +35,21 @@ def remove_old_files(target_directory):
 
 def get_images_from_dir(path):
     image_list = []
+    filenames = []
+
     for filename in glob.glob(f'{path}/*.jpg'):
         jpg_image = cv2.imread(filename)
         jpg_image = cv2.cvtColor(jpg_image, cv2.COLOR_BGR2RGB)
         image_list.append(jpg_image)
+        filenames.append(Path(filename).stem)
 
     for filename in glob.glob(f'{path}/*.png'):
         png_image = cv2.imread(filename)
         png_image = cv2.cvtColor(png_image, cv2.COLOR_BGR2RGB)
         image_list.append(png_image)
+        filenames.append(Path(filename).stem)
 
-    return image_list
+    return image_list, filenames
 
 
 def save_before_and_after_image(before_img, after_img, save_file):
