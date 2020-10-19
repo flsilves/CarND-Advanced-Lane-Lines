@@ -1,8 +1,13 @@
+"""
+Freehand functions for unit tests
+"""
+
 import unittest
 import glob
 import logging
-import matplotlib.pyplot as plt
 import sys
+import os
+import matplotlib.pyplot as plt
 import cv2
 
 
@@ -17,8 +22,14 @@ CALIBRATION_IMAGES = glob.glob(
     f'{CALIBRATION_IMAGES_DIR}/calibration*.jpg')
 
 
-def init_logging():
-    logging.basicConfig(level=logging.INFO, format='%(message)s')
+def remove_old_files(target_directory):
+    if not os.path.exists(target_directory):
+        os.makedirs(target_directory)
+    else:
+        files = glob.glob(f'{target_directory}/*.png')
+        logging.info('Deleting %d images from previous run', len(files))
+        for f in files:
+            os.remove(f)
 
 
 def get_images_from_dir(path):

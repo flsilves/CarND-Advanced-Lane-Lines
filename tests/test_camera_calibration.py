@@ -4,10 +4,6 @@ Unit tests for camera calibration
 
 import unittest
 import logging
-import glob
-import os
-import matplotlib.pyplot as plt
-import cv2
 from test_utils import *
 
 
@@ -16,7 +12,6 @@ TEST_OUTPUT_DIR = 'test_camera_calibration_output'
 
 class CameraCalibrationTest(unittest.TestCase):
     def setUp(self):
-        init_logging()
         self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
                              calibration_filename=CALIBRATION_FILE)
 
@@ -66,13 +61,5 @@ class CameraCalibrationTest(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(message)s')
-
-    if not os.path.exists(TEST_OUTPUT_DIR):
-        os.makedirs(TEST_OUTPUT_DIR)
-    else:
-        files = glob.glob(f'{TEST_OUTPUT_DIR}/*.png')
-        logging.info('Deleting %d images from previous run', len(files))
-        for f in files:
-            os.remove(f)
-
+    remove_old_files(TEST_OUTPUT_DIR)
     unittest.main()
