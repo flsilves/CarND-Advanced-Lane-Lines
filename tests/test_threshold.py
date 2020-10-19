@@ -10,16 +10,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-from utils import *
+from test_utils import *
 
 
-sys.path.append("..")  # nopep8
-from camera import Camera  # nopep8
-from threshold import *  # nopep8
-
-ROAD_IMAGES_DIR = "../test_images/"
-
-TEST_OUTPUT_DIR = "test_threshold_images"
+TEST_OUTPUT_DIR = 'test_threshold_images'
 
 
 class ThresholdImageTest(unittest.TestCase):
@@ -35,7 +29,7 @@ class ThresholdImageTest(unittest.TestCase):
 
     def xtest_threshold_road_images(self):
         test_images = get_images_from_dir(ROAD_IMAGES_DIR)
-        logging.info("Applying threshold on road images")
+        logging.info('Applying threshold on road images')
 
         for idx, test_image in enumerate(test_images):
             logging.debug("Image %d", idx)

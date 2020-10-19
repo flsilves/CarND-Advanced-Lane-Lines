@@ -3,6 +3,16 @@ import glob
 import logging
 import cv2
 import matplotlib.pyplot as plt
+import sys
+
+
+sys.path.append('..')  # nopep8
+from camera import Camera  # nopep8
+from threshold import *  # nopep8
+
+CALIBRATION_FILE = '../calibration.pickle'
+CALIBRATION_IMAGES_DIR = '../camera_cal/'
+ROAD_IMAGES_DIR = '../test_images/'
 
 
 def get_images_from_dir(path):
@@ -27,7 +37,7 @@ def save_before_and_after_image(before_img, after_img, save_file):
     width_inches = int(2*before_img.shape[1]) / image_dpi
     height_inches = int(2*before_img.shape[0]) / image_dpi
 
-    logging.debug("width %f height:%f", width_inches, height_inches)
+    logging.debug('width %f height:%f', width_inches, height_inches)
     figsize = (width_inches, height_inches)
 
     figure, (ax1, ax2) = plt.subplots(
@@ -36,11 +46,11 @@ def save_before_and_after_image(before_img, after_img, save_file):
     figure.tight_layout()
     ax1.imshow(before_img)
     ax1.axis('off')
-    ax1.set_title("original", fontsize=25)
+    ax1.set_title('original', fontsize=25)
     ax2.axis('off')
 
     ax2.imshow(after_img)
-    ax2.set_title("undistorted", fontsize=25)
+    ax2.set_title('undistorted', fontsize=25)
 
     figure.savefig(save_file, dpi='figure',
                    bbox_inches='tight')
