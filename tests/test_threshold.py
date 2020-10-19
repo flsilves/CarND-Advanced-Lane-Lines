@@ -4,6 +4,7 @@ Unit tests for camera calibration
 
 import unittest
 import logging
+import sys
 import glob
 import os
 import matplotlib.pyplot as plt
@@ -18,8 +19,7 @@ TEST_OUTPUT_DIR = 'test_threshold_images'
 class CameraCalibrationTest(unittest.TestCase):
     def setUp(self):
         logging.basicConfig(level=logging.INFO, format='%(message)s')
-        calibration_images = glob.glob(
-            f'{CALIBRATION_IMAGES_DIR}/calibration*.jpg')
+
         self.camera = Camera(nx=9, ny=6, calibration_images=calibration_images,
                              calibration_filename=CALIBRATION_FILE)
 

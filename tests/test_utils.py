@@ -8,11 +8,17 @@ import cv2
 
 sys.path.append('..')  # nopep8
 from camera import Camera  # nopep8
-from threshold import *  # nopep8
 
 CALIBRATION_FILE = '../calibration.pickle'
 CALIBRATION_IMAGES_DIR = '../camera_cal/'
 ROAD_IMAGES_DIR = '../test_images/'
+
+CALIBRATION_IMAGES = glob.glob(
+    f'{CALIBRATION_IMAGES_DIR}/calibration*.jpg')
+
+
+def init_logging():
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 
 def get_images_from_dir(path):
