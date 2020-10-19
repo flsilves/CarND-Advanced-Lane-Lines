@@ -22,15 +22,15 @@ class CameraCalibrationTest(unittest.TestCase):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Undistorting road test images')
 
-        self.undistort_and_compare(test_images, filenames)
+        self.undistort_and_save(test_images, filenames)
 
     def test_undistort_calibration_images(self):
         test_images, filenames = get_images_from_dir(CALIBRATION_IMAGES_DIR)
         logging.info('Undistorting calibration images')
 
-        self.undistort_and_compare(test_images, filenames)
+        self.undistort_and_save(test_images, filenames)
 
-    def undistort_and_compare(self, images, filenames):
+    def undistort_and_save(self, images, filenames):
         for idx, test_image in enumerate(images):
             logging.debug('Image %d', idx)
             undistorted_image = self.camera.undistort_image(test_image)

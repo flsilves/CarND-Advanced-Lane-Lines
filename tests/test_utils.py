@@ -1,5 +1,5 @@
 """
-Freehand functions for unit tests
+Free-hand functions for unit tests
 """
 
 import unittest

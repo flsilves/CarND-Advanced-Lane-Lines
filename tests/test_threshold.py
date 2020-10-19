@@ -19,7 +19,7 @@ class ImageThresholdTest(unittest.TestCase):
         return
 
     def test_threshold_images(self):
-        test_images = get_images_from_dir(ROAD_IMAGES_DIR)
+        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying threshold on road images')
 
         for idx, test_image in enumerate(test_images):
@@ -29,7 +29,7 @@ class ImageThresholdTest(unittest.TestCase):
 
             #edge_detector = EdgeDetector()
             #edges = edge_detector.detect(undistorted_image)
-            filename = f'{TEST_OUTPUT_DIR}/threshold_{str(idx)}.png'
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_threshold.png'
             save_before_and_after_image(
                 test_image, test_image, filename)
 
