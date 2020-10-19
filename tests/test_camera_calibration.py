@@ -4,7 +4,6 @@ Unit tests for camera calibration
 
 import unittest
 import logging
-import sys
 import glob
 import os
 import matplotlib.pyplot as plt

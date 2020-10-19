@@ -1,9 +1,9 @@
 import unittest
 import glob
 import logging
-import cv2
 import matplotlib.pyplot as plt
 import sys
+import cv2
 
 
 sys.path.append('..')  # nopep8
