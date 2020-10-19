@@ -4,19 +4,13 @@ Unit tests for image thresholding
 
 import unittest
 import logging
-import sys
-import glob
-import os
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
 from test_utils import *
 
 
 TEST_OUTPUT_DIR = 'test_threshold_images'
 
 
-class CameraCalibrationTest(unittest.TestCase):
+class ImageThresholdTest(unittest.TestCase):
     def setUp(self):
         self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
                              calibration_filename=CALIBRATION_FILE)
