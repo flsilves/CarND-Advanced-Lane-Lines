@@ -46,7 +46,14 @@ class HLSFilter:
         """ Transform RBG image to HLS, return binary image based on Saturation channel """
         hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
         s_channel = hls[:, :, 2]
-        thresholds[0] = np.mean(image)
+
+        shape = s_channel.shape
+
+        half = shape[0]//2
+
+        thresholds[0] = 2*np.median(s_channel[half:, :])
+        #thresholds[0] = 2*np.median(s_channel)
+
         s_binary = Transform.to_binary(s_channel, thresholds)
         return s_binary, s_channel
 
@@ -77,7 +84,7 @@ class SobelFilter:
     # TODO explore giving a component more impact than other
     def filter_mag(self, sx, sy, thresholds=(50, 255)):
         """ Filter based on combined sobel x and y  """
-        sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
+        sobel_magnitude = np.sqrt(sx ** 4 + sy ** 2)
         scaled = Transform.scale(sobel_magnitude, bits=8)
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled

@@ -82,9 +82,9 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, sdir_binary, filename)
 
-    def xtest_sobel_dir(self):
+    def xtest_sobel_xy_mag_all(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
-        logging.info('Applying sobel_y on road images')
+        logging.info('Applying sobel dir on road images')
 
         for idx, test_image in enumerate(test_images):
             logging.info(f'-> {filenames[idx]}')
@@ -117,9 +117,9 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, sobel_md_binary, filename)
 
-    def test_all(self):
+    def xtest_all(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
-        logging.info('Applying sobel_y on road images')
+        logging.info('Apply sobel and hls filter')
 
         for idx, test_image in enumerate(test_images):
             logging.info(f'-> {filenames[idx]}')
@@ -136,9 +136,33 @@ class ImageThresholdTest(unittest.TestCase):
 
             result = Transform.binary_or(sobel_all_binary, s_binary)
 
-            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_all.png'
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_filter.png'
             save_before_and_after_image(
                 test_image, result, filename)
+
+    def test_s_filter(self):
+        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
+        logging.info('Applying sobel_y on road images')
+
+        for idx, test_image in enumerate(test_images):
+            logging.info(f'-> {filenames[idx]}')
+
+            undistorted_image = self.camera.undistort_image(test_image)
+
+            logging.info('shape %s', undistorted_image.shape)
+
+            s_binary, s_channel = self.hls.filter_s(undistorted_image)
+
+            shape = s_binary.shape
+
+            half = shape[0]//2
+
+            test_image = test_image[half:, :]
+            s_binary = s_binary[half:, :]
+
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_hls.png'
+            save_before_and_after_image(
+                test_image, s_binary, filename)
 
 
 if __name__ == '__main__':
