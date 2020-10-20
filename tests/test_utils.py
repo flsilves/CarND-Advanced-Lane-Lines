@@ -14,6 +14,8 @@ from pathlib import Path
 
 sys.path.append('..')  # nopep8
 from camera import Camera  # nopep8
+from threshold import HLSFilter, SobelFilter, Transform
+
 
 CALIBRATION_FILE = '../calibration.pickle'
 CALIBRATION_IMAGES_DIR = '../camera_cal/'
@@ -24,6 +26,8 @@ CALIBRATION_IMAGES = glob.glob(
 
 
 def remove_old_files(target_directory):
+    """ Delete files from previous test run """
+
     if not os.path.exists(target_directory):
         os.makedirs(target_directory)
     else:
@@ -71,7 +75,7 @@ def save_before_and_after_image(before_img, after_img, save_file):
     ax1.set_title('original', fontsize=25)
     ax2.axis('off')
 
-    ax2.imshow(after_img)
+    ax2.imshow(after_img, cmap='gray')
     ax2.set_title('undistorted', fontsize=25)
 
     figure.savefig(save_file, dpi='figure',

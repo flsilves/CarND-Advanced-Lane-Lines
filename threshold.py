@@ -13,9 +13,11 @@ class Transform(object):
 
     def scale(image, bits=8):
         """ Resize values of image to a 0-255 scale"""
-        max_out = bits**2
+        max_out = 2**bits - 1
+        print(max_out)
         image = np.absolute(image)
-        scaled_image = np.uint8(max_out * image / np.max(image))
+        scaled_image = (max_out * image) / np.max(image)
+        scaled_image = np.uint8(scaled_image)
         return scaled_image
 
     def binary_and(binary_1, binary_2):
@@ -55,14 +57,14 @@ class SobelFilter:
     def __init__(self, kernel_size):
         self.kernel_size = kernel_size
 
-    def filter_x(self, gray, thresholds=(50, 255)):
+    def filter_x(self, gray, thresholds=(20, 255)):
         """ Filter by sobel x component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
-    def filter_y(self, gray, thresholds=(50, 255)):
+    def filter_y(self, gray, thresholds=(20, 255)):
         """ Filter by sobel y component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
@@ -70,7 +72,7 @@ class SobelFilter:
         return binary, scaled, sobel
 
     # TODO explore giving a component more impact than other
-    def filter_mag(self, sx, sy, thresholds=(50, 255)):
+    def filter_mag(self, sx, sy, thresholds=(20, 255)):
         """ Filter based on combined sobel x and y  """
         sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
         scaled = Transform.scale(sobel_magnitude, bits=8)
@@ -87,7 +89,7 @@ class SobelFilter:
         binary = Transform.to_binary(sobel, rad_threshold)
         return binary, sobel
 
-   def filter_all(self, gray)
+    def filter_all(self, gray):
         # threshoold should be relative based on the average of the gray image, check my previous project
         sx_binary, sx_scaled, sobel_x = self.sobel.filter_x(gray)
         sy_binary, sy_scaled, sobel_y = self.sobel.filter_y(gray)
@@ -97,6 +99,7 @@ class SobelFilter:
         # TODO Probably tune this
         sobel_xy_binary = Transform.binary_and(sx_binary, sy_binary)
         sobel_md_binary = Transform.binary_and(smag_binary, sdir_binary)
-        sobel_all_binary = Transform.binary_or(sobel_xy_binary, sobel_md_binary)
+        sobel_all_binary = Transform.binary_or(
+            sobel_xy_binary, sobel_md_binary)
 
-        return sobel_all_binary     
+        return sobel_all_binary
