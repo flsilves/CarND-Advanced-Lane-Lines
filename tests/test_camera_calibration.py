@@ -32,7 +32,8 @@ class CameraCalibrationTest(unittest.TestCase):
 
     def undistort_and_save(self, images, filenames):
         for idx, test_image in enumerate(images):
-            logging.debug('Image %d', idx)
+            logging.info(f'-> {filenames[idx]}')
+
             undistorted_image = self.camera.undistort_image(test_image)
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_undistort.png'
