@@ -11,9 +11,8 @@ class Transform(object):
         binary_image[(image >= thresholds[0]) & (image <= thresholds[1])] = 1
         return binary_image
 
-    def to_8_bits(image):
+    def scale(image, bits=8):
         """ Resize values of image to a 0-255 scale"""
-        bits = 8
         max_out = bits**2
         image = np.absolute(image)
         scaled_image = np.uint8(max_out * image / np.max(image))
@@ -51,44 +50,51 @@ class HLSFilter:
 
 class SobelFilter:
     """ Apply sobel filter on gray images"""
-    ## TODO adaptative threshold based on values of current image, it should all be relative
+    # TODO adaptative threshold based on values of current image, it should all be relative
 
     def __init__(self, kernel_size):
         self.kernel_size = kernel_size
 
     def filter_x(self, gray, thresholds=(50, 255)):
+        """ Filter by sobel x component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=self.kernel_size)
-        scaled = Transform.to_8_bits(sobel)
+        scaled = Transform.scale(sobel, bits=8)
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
     def filter_y(self, gray, thresholds=(50, 255)):
+        """ Filter by sobel y component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.kernel_size)
-        scaled = Transform.to_8_bits(sobel)
+        scaled = Transform.scale(sobel, bits=8)
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
+    # TODO explore giving a component more impact than other
     def filter_mag(self, sx, sy, thresholds=(50, 255)):
-        sobel = np.sqrt(sx ** 2 + sy ** 2)
-        scaled = Transform.to_8_bits(sobel)
+        """ Filter based on combined sobel x and y  """
+        sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
+        scaled = Transform.scale(sobel_magnitude, bits=8)
         binary = Transform.to_binary(scaled, thresholds)
-        return binary, scaled, sobel
+        return binary, scaled
 
+    # TODO check the filtering by direction #
     def filter_dir(self, sx, sy, thresholds=(60, 20)):
         rad_threshold = Transform.deg_to_rad(
-            thresholds[0], thresholds[1])  # TODO check this
+            thresholds[0], thresholds[1])
         absx = np.absolute(sx)
         absy = np.absolute(sy)
         sobel = np.arctan2(absy, absx)
         binary = Transform.to_binary(sobel, rad_threshold)
         return binary, sobel
 
-   def binary_all_filter(self, gray)
+   def filter_all(self, gray)
+        # threshoold should be relative based on the average of the gray image, check my previous project
         sx_binary, sx_scaled, sobel_x = self.sobel.filter_x(gray)
         sy_binary, sy_scaled, sobel_y = self.sobel.filter_y(gray)
-        smag_binary, smag_scaled, sobel_mag = self.sobel.filter_mag(sobel_x, sobel_y)
+        smag_binary, smag_scaled = self.sobel.filter_mag(sobel_x, sobel_y)
         sdir_binary, sobel_dir = self.sobel.filter_dir(sobel_x, sobel_y)
 
+        # TODO Probably tune this
         sobel_xy_binary = Transform.binary_and(sx_binary, sy_binary)
         sobel_md_binary = Transform.binary_and(smag_binary, sdir_binary)
         sobel_all_binary = Transform.binary_or(sobel_xy_binary, sobel_md_binary)
