@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
+# TODO move transform to gray to the inside of this class
+
 
 class Transform(object):
     def to_binary(image, thresholds):
@@ -84,13 +86,13 @@ class SobelFilter:
     # TODO explore giving a component more impact than other
     def filter_mag(self, sx, sy, thresholds=(50, 255)):
         """ Filter based on combined sobel x and y  """
-        sobel_magnitude = np.sqrt(sx ** 4 + sy ** 2)
+        sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
         scaled = Transform.scale(sobel_magnitude, bits=8)
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled
 
     # TODO check the filtering by direction #
-    def filter_dir(self, sx, sy, thresholds=[0.7, 1.0]):
+    def filter_dir(self, sx, sy, thresholds=[0.7, 1.3]):
         sobel = np.arctan2(np.absolute(sy), np.absolute(sx))
         binary = Transform.to_binary(sobel, thresholds)
         return binary, sobel

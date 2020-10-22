@@ -11,6 +11,46 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class WarpMachine:
+    h = 720
+    left = 210
+    right = 1110
+    top = 460
+    top_left = 580
+    top_right = 705
+    dst_l = 320
+    dst_r = 960
+
+    def __init__(self):
+        h = self.h
+        l = self.left
+        r = self.right
+        t = self.top
+        tl = self.top_left
+        tr = self.top_right
+        dl = self.dst_l
+        dr = self.dst_r
+
+        self.src = np.float32([[l, h], [tl, t], [tr, t], [r, h]])
+        self.dst = np.float32([[dl, h], [dl, 0], [dr, 0], [dr, h]])
+        self.M = cv2.getPerspectiveTransform(self.src, self.dst)
+        self.Minv = cv2.getPerspectiveTransform(self.dst, self.src)
+
+    def warp(self, image):
+        img_size = (image.shape[1], image.shape[0])
+        return cv2.warpPerspective(image, self.M, img_size, flags=cv2.INTER_LINEAR)
+
+    def unwarp(self, image):
+        img_size = (image.shape[1], image.shape[0])
+        return cv2.warpPerspective(image, self.Minv, img_size, flags=cv2.INTER_LINEAR)
+
+    def draw_src(self, image):
+        cv2.polylines(image, [np.int32(self.src)], 1, (255, 0, 0), thickness=5)
+
+    def draw_dst(self, image):
+        cv2.polylines(image, [np.int32(self.dst)], 1, (255, 0, 0), thickness=5)
+
+
 class PickleFile:
     """ Utility class to load/save pickle file"""
 

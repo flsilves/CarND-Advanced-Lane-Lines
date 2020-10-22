@@ -1,0 +1,60 @@
+"""
+Unit tests for horizon detection and warp image
+"""
+
+import unittest
+import logging
+from test_utils import *
+import numpy as np
+
+TEST_OUTPUT_DIR = 'test_warp_images'
+
+
+class ImageThresholdTest(unittest.TestCase):
+    def setUp(self):
+        self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
+                             calibration_filename=CALIBRATION_FILE)
+
+        self.sobel = SobelFilter(kernel_size=3)
+        self.hls = HLSFilter()
+        self.warper = WarpMachine()
+
+    def tearDown(self):
+        return
+
+    def test_warp(self):
+        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
+        logging.info('Applying sobel_y on road images')
+
+        for idx, test_image in enumerate(test_images):
+            logging.info(f'-> {filenames[idx]}')
+
+            undistorted_image = self.camera.undistort_image(test_image)
+
+            logging.info('shape %s', undistorted_image.shape)
+
+            s_binary, s_channel = self.hls.filter_s(undistorted_image)
+
+            gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
+
+            sobel_all_binary = self.sobel.filter_all(gray)
+
+            result = Transform.binary_or(sobel_all_binary, s_binary)
+
+            warped = self.warper.warp(result)
+
+            logging.info('shape %s', undistorted_image.shape)
+
+            out_img = fit_polynomial(warped)
+            #binary, scaled, sobel = self.sobel.filter_y(gray)
+
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_warp.png'
+            save_before_and_after_image(
+                undistorted_image, out_img, filename, 'gray')
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
+    remove_old_files(TEST_OUTPUT_DIR)
+
+    unittest.main()

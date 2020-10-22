@@ -13,8 +13,9 @@ from pathlib import Path
 
 
 sys.path.append('..')  # nopep8
-from camera import Camera  # nopep8
+from camera import Camera, WarpMachine
 from threshold import HLSFilter, SobelFilter, Transform
+from lane_finder import *
 
 
 CALIBRATION_FILE = '../calibration.pickle'
@@ -56,7 +57,7 @@ def get_images_from_dir(path):
     return image_list, filenames
 
 
-def save_before_and_after_image(before_img, after_img, save_file):
+def save_before_and_after_image(before_img, after_img, save_file, cmap='viridis'):
 
     image_dpi = 72
 
@@ -75,7 +76,7 @@ def save_before_and_after_image(before_img, after_img, save_file):
     ax1.set_title('original', fontsize=25)
     ax2.axis('off')
 
-    ax2.imshow(after_img, cmap='gray')
+    ax2.imshow(after_img, cmap=cmap)
     ax2.set_title('undistorted', fontsize=25)
 
     figure.savefig(save_file, dpi='figure',
