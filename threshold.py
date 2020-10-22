@@ -51,7 +51,7 @@ class HLSFilter:
 
         half = shape[0]//2
 
-        thresholds[0] = 2*np.median(s_channel[half:, :])
+        thresholds[0] = 5*np.median(s_channel[half:, :])
         #thresholds[0] = 2*np.median(s_channel)
 
         s_binary = Transform.to_binary(s_channel, thresholds)
