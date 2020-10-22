@@ -22,6 +22,32 @@ class ImageThresholdTest(unittest.TestCase):
     def tearDown(self):
         return
 
+    def xtest_horizon_detection(self):
+        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
+        logging.info('Applying sobel_y on road images')
+
+        for idx, test_image in enumerate(test_images):
+            logging.info(f'-> {filenames[idx]}')
+
+            undistorted_image = self.camera.undistort_image(test_image)
+
+            logging.info('shape %s', undistorted_image.shape)
+
+            gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
+
+            blur_gray = cv2.GaussianBlur(gray, ksize=(3, 3), sigmaX=0)
+
+            threshold_gray = cv2.adaptiveThreshold(blur_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                   cv2.THRESH_BINARY, 11, 2)
+            #print(x1, x2, y1, y2)
+
+            # result = cv2.line(undistorted_image, (x1, x2),
+            #                  (y1, y2), (0, 255, 0), 9)
+
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_horizon.png'
+            save_before_and_after_image(
+                undistorted_image, threshold_gray, filename, 'gray')
+
     def test_warp(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel_y on road images')
@@ -37,7 +63,12 @@ class ImageThresholdTest(unittest.TestCase):
 
             gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
 
-            sobel_all_binary = self.sobel.filter_all(gray)
+            blur_gray = cv2.GaussianBlur(gray, ksize=(13, 13), sigmaX=0)
+
+            threshold_gray = cv2.adaptiveThreshold(blur_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                                   cv2.THRESH_BINARY, 11, 2)
+
+            sobel_all_binary = self.sobel.filter_all(threshold_gray)
 
             result = Transform.binary_or(sobel_all_binary, s_binary)
 
@@ -46,11 +77,11 @@ class ImageThresholdTest(unittest.TestCase):
             logging.info('shape %s', undistorted_image.shape)
 
             out_img = fit_polynomial(warped)
-            #binary, scaled, sobel = self.sobel.filter_y(gray)
+            # binary, scaled, sobel = self.sobel.filter_y(gray)
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_warp.png'
             save_before_and_after_image(
-                undistorted_image, out_img, filename, 'gray')
+                undistorted_image, threshold_gray, filename, 'gray')
 
 
 if __name__ == '__main__':

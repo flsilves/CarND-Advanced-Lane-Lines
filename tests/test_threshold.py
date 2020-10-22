@@ -42,7 +42,8 @@ class ImageThresholdTest(unittest.TestCase):
                 test_image, binary, filename, 'gray')
 
     def xtest_sobel_x(self):
-        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
+        test_images, filenames = get_images_from_dir(
+            ROAD_IMAGES_DIR)  # TODO move loading of images to setup
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(test_images):
