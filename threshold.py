@@ -53,7 +53,7 @@ class HLSFilter:
 
         half = shape[0]//2
 
-        thresholds[0] = 5*np.median(s_channel[half:, :])
+        thresholds[0] = 3*np.median(s_channel[half:, :])
         #thresholds[0] = 2*np.median(s_channel)
 
         s_binary = Transform.to_binary(s_channel, thresholds)
@@ -116,3 +116,27 @@ class SobelFilter:
             sobel_xy_binary, sobel_md_binary)
 
         return sobel_all_binary
+
+    def filter_combined(self, image):
+
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, ksize=(13, 13), sigmaX=0)
+
+        # threshoold should be relative based on the average of the gray image, check my previous project
+        sx_binary, sx_scaled, sobel_x = self.filter_x(gray)
+        sy_binary, sy_scaled, sobel_y = self.filter_y(gray)
+        smag_binary, smag_scaled = self.filter_mag(sobel_x, sobel_y)
+        sdir_binary, sobel_dir = self.filter_dir(sobel_x, sobel_y)
+
+        # TODO Probably tune this
+        sobel_xy_binary = Transform.binary_and(sx_binary, sy_binary)
+        sobel_md_binary = Transform.binary_and(smag_binary, sdir_binary)
+        sobel_all_binary = Transform.binary_or(
+            sobel_xy_binary, sobel_md_binary)
+
+        hls_filter = HLSFilter()
+
+        s_binary, s_channel = hls_filter.filter_s(image)
+
+        result = Transform.binary_or(sobel_all_binary, s_binary)
+        return result

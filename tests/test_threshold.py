@@ -118,7 +118,7 @@ class ImageThresholdTest(unittest.TestCase):
                 undistorted_image, thresh_sauvola, filename)
 
     # apply sobel by chunks
-    def test_sobel_xy_mag_all(self):
+    def xtest_sobel_xy_mag_all(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel dir on road images')
 
@@ -156,7 +156,7 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, sobel_all_binary, filename, 'gray')
 
-    def xtest_all(self):
+    def test_all(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Apply sobel and hls filter')
 
@@ -167,17 +167,11 @@ class ImageThresholdTest(unittest.TestCase):
 
             logging.info('shape %s', undistorted_image.shape)
 
-            s_binary, s_channel = self.hls.filter_s(undistorted_image)
-
-            gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
-
-            sobel_all_binary = self.sobel.filter_all(gray)
-
-            result = Transform.binary_or(sobel_all_binary, s_binary)
+            binary = self.sobel.filter_combined(undistorted_image)
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_filter.png'
             save_before_and_after_image(
-                test_image, result, filename, 'gray')
+                test_image, binary, filename, 'gray')
 
     def xtest_s_filter(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)

@@ -59,29 +59,26 @@ class ImageThresholdTest(unittest.TestCase):
 
             logging.info('shape %s', undistorted_image.shape)
 
-            s_binary, s_channel = self.hls.filter_s(undistorted_image)
+            filtered = self.sobel.filter_combined(undistorted_image)
 
-            gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
+            warped = self.warper.warp(filtered)
 
-            blur_gray = cv2.GaussianBlur(gray, ksize=(13, 13), sigmaX=0)
-
-            threshold_gray = cv2.adaptiveThreshold(blur_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                                   cv2.THRESH_BINARY, 11, 2)
-
-            sobel_all_binary = self.sobel.filter_all(threshold_gray)
-
-            result = Transform.binary_or(sobel_all_binary, s_binary)
-
-            warped = self.warper.warp(result)
-
-            logging.info('shape %s', undistorted_image.shape)
+            #logging.info('shape %s', undistorted_image.shape)
 
             out_img = fit_polynomial(warped)
             # binary, scaled, sobel = self.sobel.filter_y(gray)
 
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_filtered.png'
+            save_before_and_after_image(
+                undistorted_image, filtered, filename, 'gray')
+
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_warp.png'
             save_before_and_after_image(
-                undistorted_image, threshold_gray, filename, 'gray')
+                undistorted_image, warped, filename, 'gray')
+
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_poly.png'
+            save_before_and_after_image(
+                undistorted_image, out_img, filename)
 
 
 if __name__ == '__main__':
