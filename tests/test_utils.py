@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.append('..')  # nopep8
 from camera import Camera, WarpMachine
-from threshold import HLSFilter, SobelFilter, Transform
+from filter import HLSFilter, SobelFilter, CombinedFilter, Transform
 from lane_finder import *
 
 

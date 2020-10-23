@@ -13,21 +13,22 @@ from skimage.filters import (threshold_otsu, threshold_niblack,
                              threshold_sauvola)
 
 
-TEST_OUTPUT_DIR = 'test_threshold_images'
+TEST_OUTPUT_DIR = 'test_filter'
 
 
-class ImageThresholdTest(unittest.TestCase):
+class FilterTests(unittest.TestCase):
     def setUp(self):
         self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
                              calibration_filename=CALIBRATION_FILE)
 
         self.sobel = SobelFilter(kernel_size=3)
         self.hls = HLSFilter()
+        self.combined = CombinedFilter()
 
     def tearDown(self):
         return
 
-    def xtest_sobel_y(self):
+    def test_sobel_y(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel_y on road images')
 
@@ -35,8 +36,6 @@ class ImageThresholdTest(unittest.TestCase):
             logging.info(f'-> {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
-
-            logging.info('shape %s', undistorted_image.shape)
 
             gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
 
@@ -46,17 +45,15 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def xtest_sobel_x(self):
+    def test_sobel_x(self):
         test_images, filenames = get_images_from_dir(
             ROAD_IMAGES_DIR)  # TODO move loading of images to setup
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(test_images):
-            logging.info(f'-> {filenames[idx]}')
+            logging.info(f'Sobel_x: {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
-
-            logging.info('shape %s', undistorted_image.shape)
 
             gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
 
@@ -66,16 +63,14 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def xtest_sobel_dir(self):
+    def test_sobel_dir(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(test_images):
-            logging.info(f'-> {filenames[idx]}')
+            logging.info(f'Sobel dir mag: {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
-
-            logging.info('shape %s', undistorted_image.shape)
 
             gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
 
@@ -83,10 +78,15 @@ class ImageThresholdTest(unittest.TestCase):
             binary_y, scaled_y, sobel_y = self.sobel.filter_y(gray)
 
             sdir_binary, sobel_dir = self.sobel.filter_dir(sobel_x, sobel_y)
+            smag_binary, smag_scaled = self.sobel.filter_mag(sobel_x, sobel_y)
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_dir.png'
             save_before_and_after_image(
                 test_image, sdir_binary, filename, 'gray')
+
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_mag.png'
+            save_before_and_after_image(
+                test_image, smag_binary, filename, 'gray')
 
     def xtest_sauvola(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
@@ -96,8 +96,6 @@ class ImageThresholdTest(unittest.TestCase):
             logging.info(f'-> {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
-
-            logging.info('shape %s', undistorted_image.shape)
 
             gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
 
@@ -118,21 +116,16 @@ class ImageThresholdTest(unittest.TestCase):
                 undistorted_image, thresh_sauvola, filename)
 
     # apply sobel by chunks
-    def xtest_sobel_xy_mag_all(self):
+    def test_sobel_xy_mag(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel dir on road images')
 
         for idx, test_image in enumerate(test_images):
-            logging.info(f'-> {filenames[idx]}')
+            logging.info(f'Sobel xy|mag: {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
 
-            logging.info('shape %s', undistorted_image.shape)
-
             gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
-
-            # gray = threshold_sauvola(
-            #    gray, window_size=5)
 
             sx_binary, sx_scaled, sobel_x = self.sobel.filter_x(gray)
             sy_binary, sy_scaled, sobel_y = self.sobel.filter_y(gray)
@@ -146,45 +139,37 @@ class ImageThresholdTest(unittest.TestCase):
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_xy.png'
             save_before_and_after_image(
-                test_image, sobel_xy_binary, filename)
+                test_image, sobel_xy_binary, filename, 'gray')
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_md.png'
             save_before_and_after_image(
-                test_image, sobel_md_binary, filename)
+                test_image, sobel_md_binary, filename, 'gray')
 
-            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_all.png'
-            save_before_and_after_image(
-                test_image, sobel_all_binary, filename, 'gray')
-
-    def test_all(self):
+    def test_sobel(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Apply sobel and hls filter')
 
         for idx, test_image in enumerate(test_images):
-            logging.info(f'-> {filenames[idx]}')
+            logging.info(f'Sobel_All: {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
 
-            logging.info('shape %s', undistorted_image.shape)
+            binary = self.sobel.filter(undistorted_image)
 
-            binary = self.sobel.filter_combined(undistorted_image)
-
-            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_filter.png'
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_final.png'
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def xtest_s_filter(self):
+    def test_s_filter(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(test_images):
-            logging.info(f'-> {filenames[idx]}')
+            logging.info(f'S_filter: {filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
 
-            logging.info('shape %s', undistorted_image.shape)
-
-            s_binary, s_channel = self.hls.filter_s(undistorted_image)
+            s_binary, s_channel = self.hls.filter(undistorted_image)
 
             shape = s_binary.shape
 

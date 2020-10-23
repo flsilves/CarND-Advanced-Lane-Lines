@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 
 class Transform(object):
+    """ Util class for binary images """
     def to_binary(image, thresholds):
         """ """
         binary_image = np.zeros_like(image)
@@ -22,31 +23,39 @@ class Transform(object):
         scaled_image = np.uint8(scaled_image)
         return scaled_image
 
-    def binary_and(binary_1, binary_2):
-        binary = np.zeros_like(binary_1)
-        binary[(binary_1 == 1) & (binary_2 == 1)] = 1
+    def binary_and(left, right):
+        binary = np.zeros_like(left)
+        binary[(left == 1) & (right == 1)] = 1
         return binary
 
-    def binary_or(binary_1, binary_2):
-        binary = np.zeros_like(binary_1)
-        binary[(binary_1 == 1) | (binary_2 == 1)] = 1
+    def binary_or(left, right):
+        binary = np.zeros_like(left)
+        binary[(left == 1) | (right == 1)] = 1
         return binary
 
-    def deg_to_rad(theta_deg, delta_deg):
-        theta = theta_deg * np.pi / 180.0
-        delta = delta_deg * np.pi / 180.0
-        return (theta - delta, theta + delta)
+
+class CombinedFilter(object):
+    """ Combine HLS and Sobel filters """
+
+    def __init__(self, kernel_size=3):
+        self.hls_filter = HLSFilter()
+        self.sobel_filter = SobelFilter(kernel_size)
+
+    def filter(self, image):
+        binary_saturation = self.hls_filter.filter(image)
+        binary_sobel = self.sobel_filter.filter(image)
+        return Transform.binary_or(binary_sobel, binary_saturation)
 
 
 class HLSFilter:
+    """ Saturation filter in HLS space """
 
-    # TODO adaptative threshold based on values of current image, it should all be relative
     def __init__(self):
         pass
 
-    def filter_s(self, image, thresholds=[150, 255]):
-        """ Transform RBG image to HLS, return binary image based on Saturation channel """
-        hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    def filter(self, image, thresholds=[150, 255]):
+        """ Transform BGR image to HLS, return binary image based on Saturation channel """
+        hls = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
         s_channel = hls[:, :, 2]
 
         shape = s_channel.shape
@@ -54,15 +63,14 @@ class HLSFilter:
         half = shape[0]//2
 
         thresholds[0] = 3*np.median(s_channel[half:, :])
-        #thresholds[0] = 2*np.median(s_channel)
+        # thresholds[0] = 2*np.median(s_channel)
 
         s_binary = Transform.to_binary(s_channel, thresholds)
         return s_binary, s_channel
 
 
 class SobelFilter:
-    """ Apply sobel filter on gray images"""
-    # TODO adaptative threshold based on values of current image, it should all be relative
+    """ Sobel Filter:  (X & Y) | (DIR & MAG) """
 
     def __init__(self, kernel_size):
         self.kernel_size = kernel_size
@@ -86,7 +94,6 @@ class SobelFilter:
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
-    # TODO explore giving a component more impact than other
     def filter_mag(self, sx, sy, thresholds=[50, 255]):
         """ Filter based on combined sobel x and y  """
         sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
@@ -96,47 +103,22 @@ class SobelFilter:
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled
 
-    # TODO check the filtering by direction #
     def filter_dir(self, sx, sy, thresholds=[0.7, 1.3]):
         sobel = np.arctan2(np.absolute(sy), np.absolute(sx))
         binary = Transform.to_binary(sobel, thresholds)
         return binary, sobel
 
-    def filter_all(self, gray):
-        # threshoold should be relative based on the average of the gray image, check my previous project
+    def filter(self, image):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
         sx_binary, sx_scaled, sobel_x = self.filter_x(gray)
         sy_binary, sy_scaled, sobel_y = self.filter_y(gray)
         smag_binary, smag_scaled = self.filter_mag(sobel_x, sobel_y)
         sdir_binary, sobel_dir = self.filter_dir(sobel_x, sobel_y)
 
-        # TODO Probably tune this
         sobel_xy_binary = Transform.binary_and(sx_binary, sy_binary)
         sobel_md_binary = Transform.binary_and(smag_binary, sdir_binary)
         sobel_all_binary = Transform.binary_or(
             sobel_xy_binary, sobel_md_binary)
 
         return sobel_all_binary
-
-    def filter_combined(self, image):
-
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, ksize=(13, 13), sigmaX=0)
-
-        # threshoold should be relative based on the average of the gray image, check my previous project
-        sx_binary, sx_scaled, sobel_x = self.filter_x(gray)
-        sy_binary, sy_scaled, sobel_y = self.filter_y(gray)
-        smag_binary, smag_scaled = self.filter_mag(sobel_x, sobel_y)
-        sdir_binary, sobel_dir = self.filter_dir(sobel_x, sobel_y)
-
-        # TODO Probably tune this
-        sobel_xy_binary = Transform.binary_and(sx_binary, sy_binary)
-        sobel_md_binary = Transform.binary_and(smag_binary, sdir_binary)
-        sobel_all_binary = Transform.binary_or(
-            sobel_xy_binary, sobel_md_binary)
-
-        hls_filter = HLSFilter()
-
-        s_binary, s_channel = hls_filter.filter_s(image)
-
-        result = Transform.binary_or(sobel_all_binary, s_binary)
-        return result
