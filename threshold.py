@@ -71,7 +71,9 @@ class SobelFilter:
         """ Filter by sobel x component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
-        #thresholds[0] = 20*np.median(scaled)
+
+        half = scaled.shape[0]//2
+        thresholds[0] = 4*np.median(scaled[half:, :])
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
@@ -79,15 +81,18 @@ class SobelFilter:
         """ Filter by sobel y component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
-        #thresholds[0] = 20*np.median(scaled)
+        half = scaled.shape[0]//2
+        thresholds[0] = 4*np.median(scaled[half:, :])
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
     # TODO explore giving a component more impact than other
-    def filter_mag(self, sx, sy, thresholds=(50, 255)):
+    def filter_mag(self, sx, sy, thresholds=[50, 255]):
         """ Filter based on combined sobel x and y  """
         sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
         scaled = Transform.scale(sobel_magnitude, bits=8)
+        half = scaled.shape[0]//2
+        thresholds[0] = 2*np.median(scaled[half:, :])
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled
 

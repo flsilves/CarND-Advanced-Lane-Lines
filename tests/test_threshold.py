@@ -8,6 +8,11 @@ from test_utils import *
 import numpy as np
 
 
+from skimage.data import page
+from skimage.filters import (threshold_otsu, threshold_niblack,
+                             threshold_sauvola)
+
+
 TEST_OUTPUT_DIR = 'test_threshold_images'
 
 
@@ -83,7 +88,37 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, sdir_binary, filename, 'gray')
 
-    def xtest_sobel_xy_mag_all(self):
+    def xtest_sauvola(self):
+        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
+        logging.info('Applying sobel dir on road images')
+
+        for idx, test_image in enumerate(test_images):
+            logging.info(f'-> {filenames[idx]}')
+
+            undistorted_image = self.camera.undistort_image(test_image)
+
+            logging.info('shape %s', undistorted_image.shape)
+
+            gray = cv2.cvtColor(undistorted_image, cv2.COLOR_BGR2GRAY)
+
+            binary_global = gray > threshold_otsu(
+                gray)
+
+            window_size = 15
+            thresh_niblack = threshold_niblack(
+                gray, window_size=window_size)
+            thresh_sauvola = threshold_sauvola(
+                gray, window_size=window_size)
+
+            binary_niblack = gray > thresh_niblack
+            binary_sauvola = gray > thresh_sauvola
+
+            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sauvola.png'
+            save_before_and_after_image(
+                undistorted_image, thresh_sauvola, filename)
+
+    # apply sobel by chunks
+    def test_sobel_xy_mag_all(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel dir on road images')
 
@@ -95,6 +130,9 @@ class ImageThresholdTest(unittest.TestCase):
             logging.info('shape %s', undistorted_image.shape)
 
             gray = cv2.cvtColor(test_image, cv2.COLOR_BGR2GRAY)
+
+            # gray = threshold_sauvola(
+            #    gray, window_size=5)
 
             sx_binary, sx_scaled, sobel_x = self.sobel.filter_x(gray)
             sy_binary, sy_scaled, sobel_y = self.sobel.filter_y(gray)
@@ -116,7 +154,7 @@ class ImageThresholdTest(unittest.TestCase):
 
             filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sobel_all.png'
             save_before_and_after_image(
-                test_image, sobel_md_binary, filename, 'gray')
+                test_image, sobel_all_binary, filename, 'gray')
 
     def xtest_all(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
@@ -141,7 +179,7 @@ class ImageThresholdTest(unittest.TestCase):
             save_before_and_after_image(
                 test_image, result, filename, 'gray')
 
-    def test_s_filter(self):
+    def xtest_s_filter(self):
         test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
         logging.info('Applying sobel_y on road images')
 
