@@ -41,9 +41,9 @@ class CombinedFilter(object):
         self.sobel_filter = SobelFilter(kernel_size)
 
     def filter(self, image):
-        binary_saturation = self.hls_filter.filter(image)
+        s_binary, s_channel = self.hls_filter.filter(image)
         binary_sobel = self.sobel_filter.filter(image)
-        return Transform.binary_or(binary_sobel, binary_saturation)
+        return Transform.binary_or(binary_sobel, s_binary)
 
 
 class HLSFilter:

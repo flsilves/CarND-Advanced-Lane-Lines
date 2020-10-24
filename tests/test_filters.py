@@ -30,7 +30,7 @@ class FilterTests(unittest.TestCase):
     def tearDown(self):
         return
 
-    def test_sobel_y(self):
+    def xtest_sobel_y(self):
 
         logging.info('Applying sobel_y on road images')
 
@@ -47,7 +47,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def test_sobel_x(self):
+    def xtest_sobel_x(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -63,7 +63,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def test_sobel_dir(self):
+    def xtest_sobel_dir(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -113,7 +113,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 undistorted_image, thresh_sauvola, filename)
 
-    def test_sobel_xy_mag(self):
+    def xtest_sobel_xy_mag(self):
         logging.info('Applying sobel dir on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -141,7 +141,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, sobel_md_binary, filename, 'gray')
 
-    def test_sobel(self):
+    def xtest_sobel(self):
         logging.info('Apply sobel and hls filter')
 
         for idx, test_image in enumerate(self.test_images):
@@ -155,7 +155,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def test_s_filter(self):
+    def xtest_s_filter(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -165,16 +165,41 @@ class FilterTests(unittest.TestCase):
 
             s_binary, s_channel = self.hls.filter(undistorted_image)
 
-            shape = s_binary.shape
+            #shape = s_binary.shape
 
-            half = shape[0]//2
+            #half = shape[0]//2
 
-            test_image = test_image[half:, :]
-            s_binary = s_binary[half:, :]
+            #test_image = test_image[half:, :]
+            #s_binary = s_binary[half:, :]
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hls.png'
             save_before_and_after_image(
                 test_image, s_binary, filename, 'gray')
+
+    def test_combined(self):
+        logging.info('Applying sobel_y on road images')
+
+        for idx, test_image in enumerate(self.test_images):
+            logging.info(f'Combined: {self.filenames[idx]}')
+
+            undistorted_image = self.camera.undistort_image(test_image)
+
+            #binary = self.combined.filter(undistorted_image)
+            s_binary, s_channel = self.hls.filter(undistorted_image)
+            binary_sobel = self.sobel.filter(undistorted_image)
+            binary_final = Transform.binary_or(binary_sobel, s_binary)
+
+            filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hls.png'
+            save_before_and_after_image(
+                test_image, s_binary, filename, 'gray')
+
+            filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_sobel.png'
+            save_before_and_after_image(
+                test_image, binary_sobel, filename, 'gray')
+
+            filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_final.png'
+            save_before_and_after_image(
+                test_image, binary_final, filename, 'gray')
 
 
 if __name__ == '__main__':
