@@ -18,16 +18,16 @@ class ImageThresholdTest(unittest.TestCase):
         self.sobel = SobelFilter(kernel_size=3)
         self.hls = HLSFilter()
         self.warper = WarpMachine()
+        self.test_images, self.filenames = get_images_from_dir(ROAD_IMAGES_DIR)
 
     def tearDown(self):
         return
 
     def xtest_horizon_detection(self):
-        test_images, filenames = get_images_from_dir(ROAD_IMAGES_DIR)
-        logging.info('Applying sobel_y on road images')
+        logging.info('Horizon detection')
 
-        for idx, test_image in enumerate(test_images):
-            logging.info(f'-> {filenames[idx]}')
+        for idx, test_image in enumerate(self.test_images):
+            logging.info(f'-> {self.filenames[idx]}')
 
             undistorted_image = self.camera.undistort_image(test_image)
 
@@ -44,7 +44,7 @@ class ImageThresholdTest(unittest.TestCase):
             # result = cv2.line(undistorted_image, (x1, x2),
             #                  (y1, y2), (0, 255, 0), 9)
 
-            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_horizon.png'
+            filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_horizon.png'
             save_before_and_after_image(
                 undistorted_image, threshold_gray, filename, 'gray')
 

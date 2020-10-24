@@ -108,11 +108,10 @@ class FilterTests(unittest.TestCase):
             binary_niblack = gray > thresh_niblack
             binary_sauvola = gray > thresh_sauvola
 
-            filename = f'{TEST_OUTPUT_DIR}/{filenames[idx]}_sauvola.png'
+            filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_sauvola.png'
             save_before_and_after_image(
                 undistorted_image, thresh_sauvola, filename)
 
-    # apply sobel by chunks
     def test_sobel_xy_mag(self):
         logging.info('Applying sobel dir on road images')
 
