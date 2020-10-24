@@ -13,20 +13,30 @@ import matplotlib.pyplot as plt
 
 class WarpMachine:
     h = 720
-    left = 210
-    right = 1110
+    left = 110
+    right = 1210
     top = 460
     top_left = 580
     top_right = 705
-    dst_l = 0
+    dst_l = 320
     dst_r = 960
 
     def __init__(self, imshape):
 
         self.imshape = imshape
+        h = self.h
+        l = self.left
+        r = self.right
+        t = self.top
+        tl = self.top_left
+        tr = self.top_right
+        dl = self.dst_l
+        dr = self.dst_r
 
-        self.src = self.get_src_region(self.imshape)
-        self.dst = self.get_dst_region(self.imshape)
+        self.src = np.float32([[l, h], [tl, t], [tr, t], [r, h]])
+        self.dst = np.float32([[dl, h], [dl, 0], [dr, 0], [dr, h]])
+        #self.src = self.get_src_region(self.imshape)
+        #self.dst = self.get_dst_region(self.imshape)
         self.M = cv2.getPerspectiveTransform(self.src, self.dst)
         self.Minv = cv2.getPerspectiveTransform(self.dst, self.src)
 
