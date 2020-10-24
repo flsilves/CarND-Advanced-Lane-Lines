@@ -3,8 +3,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# TODO move transform to gray to the inside of this class
-
 
 class Transform(object):
     """ Util class for binary images """
@@ -17,18 +15,19 @@ class Transform(object):
     def scale(image, bits=8):
         """ Resize values of image to a 0-255 scale"""
         max_out = 2**bits - 1
-        print(max_out)
         image = np.absolute(image)
         scaled_image = (max_out * image) / np.max(image)
         scaled_image = np.uint8(scaled_image)
         return scaled_image
 
     def binary_and(left, right):
+        """ Return AND of two binary images """
         binary = np.zeros_like(left)
         binary[(left == 1) & (right == 1)] = 1
         return binary
 
     def binary_or(left, right):
+        """ Return OR of two binary images """
         binary = np.zeros_like(left)
         binary[(left == 1) | (right == 1)] = 1
         return binary
@@ -63,7 +62,6 @@ class HLSFilter:
         half = shape[0]//2
 
         thresholds[0] = 3*np.median(s_channel[half:, :])
-        # thresholds[0] = 2*np.median(s_channel)
 
         s_binary = Transform.to_binary(s_channel, thresholds)
         return s_binary, s_channel
@@ -76,7 +74,7 @@ class SobelFilter:
         self.kernel_size = kernel_size
 
     def filter_x(self, gray, thresholds=[50, 255]):
-        """ Filter by sobel x component """
+        """ Filter gray image by sobel x component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
 
@@ -86,7 +84,7 @@ class SobelFilter:
         return binary, scaled, sobel
 
     def filter_y(self, gray, thresholds=[50, 255]):
-        """ Filter by sobel y component """
+        """ Filter gray image by sobel y component """
         sobel = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
         half = scaled.shape[0]//2
@@ -95,7 +93,7 @@ class SobelFilter:
         return binary, scaled, sobel
 
     def filter_mag(self, sx, sy, thresholds=[50, 255]):
-        """ Filter based on combined sobel x and y  """
+        """ Filter by magnitude given sobel x and y  """
         sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
         scaled = Transform.scale(sobel_magnitude, bits=8)
         half = scaled.shape[0]//2
@@ -104,11 +102,13 @@ class SobelFilter:
         return binary, scaled
 
     def filter_dir(self, sx, sy, thresholds=[0.7, 1.3]):
+        """ Filter gray image by direction (rad) """
         sobel = np.arctan2(np.absolute(sy), np.absolute(sx))
         binary = Transform.to_binary(sobel, thresholds)
         return binary, sobel
 
     def filter(self, image):
+        """ Complete sobel filter, input: BGR image """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
         sx_binary, sx_scaled, sobel_x = self.filter_x(gray)
