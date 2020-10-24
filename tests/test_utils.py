@@ -38,6 +38,20 @@ def remove_old_files(target_directory):
             os.remove(f)
 
 
+def weighted_img(img, initial_img, α=0.8, β=1., γ=0.):
+    """
+    `img` is the output of the hough_lines(), An image with lines drawn on it.
+    Should be a blank image (all black) with lines drawn on it.
+
+    `initial_img` should be the image before any processing.
+
+    The result image is computed as follows:
+
+    initial_img * α + img * β + γ
+    """
+    return cv2.addWeighted(initial_img, α, img, β, γ)
+
+
 def get_images_from_dir(path):
     image_list = []
     filenames = []

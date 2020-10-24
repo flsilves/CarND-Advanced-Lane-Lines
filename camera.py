@@ -18,21 +18,15 @@ class WarpMachine:
     top = 460
     top_left = 580
     top_right = 705
-    dst_l = 320
+    dst_l = 0
     dst_r = 960
 
-    def __init__(self):
-        h = self.h
-        l = self.left
-        r = self.right
-        t = self.top
-        tl = self.top_left
-        tr = self.top_right
-        dl = self.dst_l
-        dr = self.dst_r
+    def __init__(self, imshape):
 
-        self.src = np.float32([[l, h], [tl, t], [tr, t], [r, h]])
-        self.dst = np.float32([[dl, h], [dl, 0], [dr, 0], [dr, h]])
+        self.imshape = imshape
+
+        self.src = self.get_src_region(self.imshape)
+        self.dst = self.get_dst_region(self.imshape)
         self.M = cv2.getPerspectiveTransform(self.src, self.dst)
         self.Minv = cv2.getPerspectiveTransform(self.dst, self.src)
 
@@ -40,15 +34,36 @@ class WarpMachine:
         img_size = (image.shape[1], image.shape[0])
         return cv2.warpPerspective(image, self.M, img_size, flags=cv2.INTER_LINEAR)
 
+    def get_src_region(self, imshape, height_factor=.6, top_left_factor=.45, right_top_factor=.55):
+        left_bottom = [0, imshape[0]]
+        left_top = [top_left_factor*imshape[1], height_factor*imshape[0]]
+        right_top = [right_top_factor*imshape[1], height_factor*imshape[0]]
+        right_bottom = [imshape[1], imshape[0]]
+
+        vertices = np.array(
+            [[left_bottom, left_top, right_top, right_bottom]], np.float32)
+        return vertices
+
+    def get_dst_region(self, imshape, height_factor=.6, top_left_factor=.45, right_top_factor=.55):
+        print(imshape[0], imshape[1])
+        left_bottom = [280, imshape[0]]
+        left_top = [280, 0]
+        right_top = [imshape[1] - 280, 0]
+        right_bottom = [imshape[1] - 280, imshape[0]]
+
+        vertices = np.array(
+            [[left_bottom, left_top, right_top, right_bottom]], np.float32)
+        return vertices
+
     def unwarp(self, image):
         img_size = (image.shape[1], image.shape[0])
         return cv2.warpPerspective(image, self.Minv, img_size, flags=cv2.INTER_LINEAR)
 
     def draw_src(self, image):
-        cv2.polylines(image, [np.int32(self.src)], 1, (255, 0, 0), thickness=5)
+        cv2.polylines(image, [np.int32(self.src)], 1, (0, 255, 0), thickness=2)
 
     def draw_dst(self, image):
-        cv2.polylines(image, [np.int32(self.dst)], 1, (255, 0, 0), thickness=5)
+        cv2.polylines(image, [np.int32(self.dst)], 1, (255, 0, 0), thickness=2)
 
 
 class PickleFile:

@@ -10,15 +10,17 @@ import numpy as np
 TEST_OUTPUT_DIR = 'test_warp'
 
 
-class ImageThresholdTest(unittest.TestCase):
+class WarpTest(unittest.TestCase):
     def setUp(self):
         self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
                              calibration_filename=CALIBRATION_FILE)
 
         self.sobel = SobelFilter(kernel_size=3)
         self.hls = HLSFilter()
-        self.warper = WarpMachine()
+        self.combined = CombinedFilter()
+
         self.test_images, self.filenames = get_images_from_dir(ROAD_IMAGES_DIR)
+        self.warper = WarpMachine(self.test_images[0].shape)
 
     def tearDown(self):
         return
@@ -39,6 +41,7 @@ class ImageThresholdTest(unittest.TestCase):
 
             threshold_gray = cv2.adaptiveThreshold(blur_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                                    cv2.THRESH_BINARY, 11, 2)
+
             # print(x1, x2, y1, y2)
 
             # result = cv2.line(undistorted_image, (x1, x2),
@@ -56,9 +59,18 @@ class ImageThresholdTest(unittest.TestCase):
 
             undistorted_image = self.camera.undistort_image(test_image)
 
-            filtered = self.sobel.filter(undistorted_image)
+            filtered = self.combined.filter(undistorted_image)
+
+            # vertices = self.warper.get_region_of_interest_vertices(
+            #    filtered.shape, 0.55)
 
             warped = self.warper.warp(filtered)
+
+            # final = cv2.polylines(
+            #    undistorted_image, [vertices], True, (0, 0, 255), 3)
+
+            self.warper.draw_src(undistorted_image)
+            self.warper.draw_dst(undistorted_image)
 
             warped_poly = fit_polynomial(warped)
 
