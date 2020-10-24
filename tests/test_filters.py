@@ -13,10 +13,11 @@ from skimage.filters import (threshold_otsu, threshold_niblack,
                              threshold_sauvola)
 
 
-TEST_OUTPUT_DIR = 'test_filter'
+TEST_OUTPUT_DIR = 'test_filters'
 
 
 class FilterTests(unittest.TestCase):
+
     def setUp(self):
         self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
                              calibration_filename=CALIBRATION_FILE)
