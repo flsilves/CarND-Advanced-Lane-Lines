@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 
 class WarpMachine:
     h = 720
-    left = 110
-    right = 1210
+    left = 210
+    right = 1110
     top = 460
     top_left = 580
     top_right = 705
@@ -42,7 +42,15 @@ class WarpMachine:
 
     def warp(self, image):
         img_size = (image.shape[1], image.shape[0])
-        return cv2.warpPerspective(image, self.M, img_size, flags=cv2.INTER_LINEAR)
+        warped = cv2.warpPerspective(
+            image, self.M, img_size, flags=cv2.INTER_LINEAR)
+
+        warped[:, 0:200] = 0
+        warped[:, -200:] = 0
+
+        #warped[:, :-100] = 0
+
+        return warped
 
     def get_src_region(self, imshape, height_factor=.6, top_left_factor=.45, right_top_factor=.55):
         left_bottom = [0, imshape[0]]
