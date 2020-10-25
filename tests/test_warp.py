@@ -61,22 +61,16 @@ class WarpTest(unittest.TestCase):
 
             filtered = self.combined.filter(undistorted_image)
 
-            # vertices = self.warper.get_region_of_interest_vertices(
-            #    filtered.shape, 0.55)
-
             warped = self.warper.warp(filtered)
-
-            # final = cv2.polylines(
-            #    undistorted_image, [vertices], True, (0, 0, 255), 3)
 
             self.warper.draw_src(undistorted_image)
             self.warper.draw_dst(undistorted_image)
 
-            warped_poly, histogram, ploty, left_fitx, right_fitx = fit_polynomial(
-                warped)
-            logging.info(type(histogram))
+            line_fit = LineFit(
+                undistorted_image.shape)
 
-            bottom_half = warped[warped.shape[0]//2:, :]
+            ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
+                warped)
 
             warp_zero = np.zeros_like(warped).astype(np.uint8)
             color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
@@ -116,7 +110,7 @@ class WarpTest(unittest.TestCase):
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hist.png'
             plot_histogram(
-                bottom_half, histogram, filename, 'gray')
+                warped[warped.shape[0]//2:, :], histogram, filename, 'gray')
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_filtered.png'
             save_before_and_after_image(
@@ -128,7 +122,7 @@ class WarpTest(unittest.TestCase):
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_poly.png'
             save_before_and_after_image(
-                undistorted_image, warped_poly, filename)
+                undistorted_image, vis_img, filename)
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_overlay.png'
             save_before_and_after_image(

@@ -45,6 +45,7 @@ class WarpMachine:
         warped = cv2.warpPerspective(
             image, self.M, img_size, flags=cv2.INTER_LINEAR)
 
+        # crop overly distorted area
         warped[:, 0:180] = 0
         warped[:, -180:] = 0
 

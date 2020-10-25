@@ -1,19 +1,24 @@
 """ Main module """
 
 import logging
-import glob
 from camera import Camera
 
 
 def main():
     """ Main """
     logging.basicConfig(level=logging.INFO, format='%(message)s')
-    calibration_images = glob.glob('camera_cal/calibration*.jpg')
 
-    camera = Camera(nx=9, ny=6, calibration_images=calibration_images,
-                    calibration_filename='calibration.pickle')
+    input_file = "project_video.mp4"
+    output_file = "project_video_output.mp4"
 
-    camera.show_undistorted_images()
+    ProcessProjectVideo(input_file, output_file)
+
+
+def ProcessProjectVideo(input_file, output_file):
+    logging.info(f'Processing video: {input_file} -> {output_file}')
+
+    tracker = LaneTracker()
+    tracker.process_video(input_file, output_file)
 
 
 if __name__ == "__main__":

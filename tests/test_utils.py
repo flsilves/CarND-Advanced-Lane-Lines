@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.append('..')  # nopep8
 from camera import Camera, WarpMachine
 from filter import HLSFilter, SobelFilter, CombinedFilter, Transform
-from lane_finder import *
+from line_fit import LineFit
 
 
 CALIBRATION_FILE = '../calibration.pickle'
