@@ -72,7 +72,14 @@ class WarpTest(unittest.TestCase):
             self.warper.draw_src(undistorted_image)
             self.warper.draw_dst(undistorted_image)
 
-            warped_poly = fit_polynomial(warped)
+            warped_poly, histogram = fit_polynomial(warped)
+            logging.info(type(histogram))
+
+            bottom_half = warped[warped.shape[0]//2:, :]
+
+            filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hist.png'
+            plot_histogram(
+                bottom_half, histogram, filename, 'gray')
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_filtered.png'
             save_before_and_after_image(

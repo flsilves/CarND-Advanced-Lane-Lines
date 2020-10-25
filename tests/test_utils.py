@@ -97,3 +97,29 @@ def save_before_and_after_image(before_img, after_img, save_file, cmap='viridis'
                    bbox_inches='tight')
 
     plt.close('all')
+
+
+def plot_histogram(image, histogram, save_file, cmap='viridis'):
+
+    image_dpi = 72
+
+    width_inches = int(image.shape[1]) / image_dpi
+    height_inches = int(image.shape[0]) / image_dpi
+
+    logging.debug('width %f height:%f', width_inches, height_inches)
+    figsize = (width_inches, height_inches)
+
+    figure, (ax1) = plt.subplots(
+        1, 1, figsize=figsize, dpi=image_dpi, frameon=False)
+
+    figure.tight_layout()
+    ax1.imshow(image)
+    ax1.plot(histogram)
+
+    ax1.axis('off')
+    ax1.set_title('original', fontsize=25)
+
+    figure.savefig(save_file, dpi='figure',
+                   bbox_inches='tight')
+
+    plt.close('all')
