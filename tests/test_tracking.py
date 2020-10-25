@@ -7,10 +7,10 @@ import logging
 from test_utils import *
 import numpy as np
 
-TEST_OUTPUT_DIR = 'test_warp'
+TEST_OUTPUT_DIR = 'test_tracking'
 
 
-class WarpTest(unittest.TestCase):
+class TestTracking(unittest.TestCase):
     def setUp(self):
         self.camera = Camera(nx=9, ny=6, calibration_images=CALIBRATION_IMAGES,
                              calibration_filename=CALIBRATION_FILE)
@@ -75,8 +75,11 @@ class WarpTest(unittest.TestCase):
             ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
                 warped)
 
+            left_curvature_m, right_curvature_m = line_fit.measure_curvature_real(
+                ploty)
+
             overlay = draw_overlay(
-                undistorted_image_copy, warped, self.warper.Minv, ploty, left_fitx, right_fitx)
+                undistorted_image_copy, warped, self.warper.Minv, ploty, left_fitx, right_fitx, left_curvature_m, right_curvature_m)
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hist.png'
             plot_histogram(

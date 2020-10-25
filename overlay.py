@@ -9,7 +9,7 @@ def put_text(image, text, color=(255, 255, 255), ypos=100):
                 font, 1, color, thickness=2)
 
 
-def draw_overlay(original_image, warped, Minv, ploty, left_fitx, right_fitx):
+def draw_overlay(original_image, warped, Minv, ploty, left_fitx, right_fitx, left_curvature, right_curvature):
     warp_zero = np.zeros_like(warped).astype(np.uint8)
     color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
@@ -29,8 +29,9 @@ def draw_overlay(original_image, warped, Minv, ploty, left_fitx, right_fitx):
     result = cv2.addWeighted(original_image, 1, newwarp, 0.3, 0)
 
     # pos_str = "Left" if pos < 0 else "Right"
-    crl_text = "Radius of curvature (left) = %.1f km" % (1000 / 1000)
-    crr_text = "Radius of curvature (right) = %.1f km" % (1000 / 1000)
+    crl_text = "Radius of curvature (left) = %.1f km" % (left_curvature / 1000)
+    crr_text = "Radius of curvature (right) = %.1f km" % (
+        right_curvature / 1000)
 
     put_text(result, crl_text, ypos=50)
     put_text(result, crr_text, ypos=100)

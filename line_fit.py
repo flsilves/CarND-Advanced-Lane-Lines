@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import cv2
+import logging
 
 
 class LineFit():
@@ -128,6 +129,9 @@ class LineFit():
         self.left_fit = np.polyfit(lefty, leftx, 2)
         self.right_fit = np.polyfit(righty, rightx, 2)
 
+        logging.info(f'Left_fit {self.left_fit}')
+        logging.info(f'Right_fit {self.right_fit}')
+
         left_fit = self.left_fit
         right_fit = self.right_fit
 
@@ -163,22 +167,27 @@ class LineFit():
         except TypeError:
             print("The function failed to fit a line!")
 
-    def measure_curvature_real(self, ploty, left_fit_cr, right_fit_cr):
+    def measure_curvature_real(self, ploty):
         '''
         Calculates the curvature of polynomial functions in meters.
+        Need to 
         '''
         # Define conversions in x and y from pixels space to meters
-        ym_per_pix = self.ym_per_pix  # meters per pixel in y dimension
-        xm_per_pix = self.xm_per_pix  # meters per pixel in x dimension
+        ym_per_pix = 30/720  # meters per pixel in y dimension
+        xm_per_pix = 3.7/700
+
+        left_fit_cr = self.left_fit
+        right_fit_cr = self.right_fit
 
         # Define y-value where we want radius of curvature
         # We'll choose the maximum y-value, corresponding to the bottom of the image
         y_eval = np.max(ploty)
+        print(y_eval)
 
         # Calculation of R_curve (radius of curvature)
-        left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix +
-                               left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
-        right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix +
-                                right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+        left_curvature = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix +
+                                left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+        right_curvature = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix +
+                                 right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
 
-        return left_curverad, right_curverad
+        return left_curvature, right_curvature
