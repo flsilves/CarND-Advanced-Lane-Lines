@@ -122,7 +122,7 @@ def fit_polynomial(binary_warped):
         ploty, left_fit, right_fit)
     print(left_curverad, right_curverad)
 
-    return out_img, histogram
+    return out_img, histogram, ploty, left_fitx, right_fitx
 
 
 def draw_polyfit(image, fit):
