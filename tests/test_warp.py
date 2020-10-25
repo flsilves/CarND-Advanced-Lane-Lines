@@ -20,7 +20,8 @@ class WarpTest(unittest.TestCase):
         self.combined = CombinedFilter()
 
         self.test_images, self.filenames = get_images_from_dir(ROAD_IMAGES_DIR)
-        self.warper = WarpMachine(self.test_images[0].shape)
+        self.warper = Warper(self.test_images[0].shape)
+        self.lane_tracker = LaneTracker(CALIBRATION_IMAGES, CALIBRATION_FILE)
 
     def tearDown(self):
         return
@@ -59,6 +60,8 @@ class WarpTest(unittest.TestCase):
 
             undistorted_image = self.camera.undistort_image(test_image)
 
+            undistorted_image_copy = np.copy(undistorted_image)
+
             filtered = self.combined.filter(undistorted_image)
 
             warped = self.warper.warp(filtered)
@@ -72,41 +75,8 @@ class WarpTest(unittest.TestCase):
             ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
                 warped)
 
-            warp_zero = np.zeros_like(warped).astype(np.uint8)
-            color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
-
-            # Recast the x and y points into usable format for cv2.fillPoly()
-            pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
-            pts_right = np.array(
-                [np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
-            pts = np.hstack((pts_left, pts_right))
-
-            # Draw the lane onto the warped blank image
-            cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
-
-            # Warp the blank back to original image space using inverse perspective matrix (Minv)
-            newwarp = cv2.warpPerspective(
-                color_warp, self.warper.Minv, (test_image.shape[1], test_image.shape[0]))
-            # Combine the result with the original image
-            result = cv2.addWeighted(test_image, 1, newwarp, 0.3, 0)
-
-            #pos_str = "Left" if pos < 0 else "Right"
-            crl_text = "Radius of curvature (left) = %.1f km" % (1000 / 1000)
-            crr_text = "Radius of curvature (right) = %.1f km" % (1000 / 1000)
-            # cr_text = "Radius of curvature (avg) = %.1f km" % (
-            #    (left_cr + right_cr) / 2000)
-            # pos_text = "Vehicle is %.1f m %s from the lane center" % (
-            #    np.abs(pos), pos_str)
-
-            def put_text(image, text, color=(255, 255, 255), ypos=100):
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.putText(image, text, (100, ypos),
-                            font, 1, color, thickness=2)
-
-            put_text(result, crl_text, ypos=50)
-            put_text(result, crr_text, ypos=100)
-            #put_text(vis_overlay, cr_text, ypos=150)
-            #put_text(vis_overlay, pos_text, ypos=200)
+            overlay = draw_overlay(
+                undistorted_image_copy, warped, self.warper.Minv, ploty, left_fitx, right_fitx)
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hist.png'
             plot_histogram(
@@ -126,7 +96,7 @@ class WarpTest(unittest.TestCase):
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_overlay.png'
             save_before_and_after_image(
-                undistorted_image, result, filename)
+                undistorted_image, overlay, filename)
 
 
 if __name__ == '__main__':

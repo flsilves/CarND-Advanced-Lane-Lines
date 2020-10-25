@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class WarpMachine:
+class Warper:
     h = 720
     left = 210
     right = 1110

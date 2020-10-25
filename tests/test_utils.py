@@ -13,10 +13,11 @@ from pathlib import Path
 
 
 sys.path.append('..')  # nopep8
-from camera import Camera, WarpMachine
+from camera import Camera, Warper
 from filter import HLSFilter, SobelFilter, CombinedFilter, Transform
 from line_fit import LineFit
-
+from lane_tracker import LaneTracker
+from overlay import *
 
 CALIBRATION_FILE = '../calibration.pickle'
 CALIBRATION_IMAGES_DIR = '../camera_cal/'

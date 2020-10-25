@@ -4,9 +4,10 @@ import numpy as np
 import glob
 from moviepy.editor import VideoFileClip
 
-from camera import Camera, WarpMachine
+from camera import Camera, Warper
 from filter import CombinedFilter
 from line_fit import LineFit
+from overlay import *
 
 
 class Line():
@@ -35,16 +36,14 @@ class Line():
 
 class LaneTracker():
 
-    calibration_images = glob.glob('camera_cal/calibration*.jpg')
+    def __init__(self, calibration_images, calibration_file):
 
-    def __init__(self):
-
-        #self.left_line = Line()
-        #self.right_line = Line()
+        # self.left_line = Line()
+        # self.right_line = Line()
         self.filter = CombinedFilter()
-        self.warper = WarpMachine()
+        #self.warper = Warper()
         self.camera = Camera(nx=9, ny=6, calibration_images=calibration_images,
-                             calibration_filename='calibration.pickle')
+                             calibration_filename=calibration_file)
 
     def process_video(self, input_file, output_file):
 
@@ -55,18 +54,19 @@ class LaneTracker():
         clip.write_videofile(output_file, audio=False, verbose=False)
 
     def process_image(self, image):
-        undistorted_image = self.camera.undistort(image)
+        undistorted_image = self.camera.undistort_image(image)
 
         binary_filtered = self.filter.filter(undistorted_image)
 
-        warped = self.warper.warp(binary_filtered)
+        warper = Warper(binary_filtered.shape)
+        warped = warper.warp(binary_filtered)
 
         line_fit = LineFit(image.shape)
 
-        out_img, histogram, ploty, left_fitx, right_fitx = line_fit.fit_polynomial(
+        ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
             warped)
 
-        vis_overlay = draw_overlay(
-            self.warper, lane_fitting, undistorted_image, warped)
+        # vis_overlay = draw_overlay(
+        #    undistorted_image, warped, warper.Minv, ploty, left_fitx, right_fitx)
 
-        return vis_overlay
+        return vis_img

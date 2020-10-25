@@ -1,7 +1,13 @@
 """ Main module """
 
 import logging
+import glob
 from camera import Camera
+from lane_tracker import LaneTracker
+
+CALIBRATION_FILE = 'calibration.pickle'
+CALIBRATION_IMAGES = glob.glob(
+    'camera_cal/calibration*.jpg')
 
 
 def main():
@@ -17,7 +23,7 @@ def main():
 def ProcessProjectVideo(input_file, output_file):
     logging.info(f'Processing video: {input_file} -> {output_file}')
 
-    tracker = LaneTracker()
+    tracker = LaneTracker(CALIBRATION_IMAGES, CALIBRATION_FILE)
     tracker.process_video(input_file, output_file)
 
 
