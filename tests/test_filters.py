@@ -31,7 +31,6 @@ class FilterTests(unittest.TestCase):
         return
 
     def test_sobel_y(self):
-
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -164,13 +163,6 @@ class FilterTests(unittest.TestCase):
             undistorted_image = self.camera.undistort_image(test_image)
 
             s_binary, s_channel = self.hls.filter(undistorted_image)
-
-            #shape = s_binary.shape
-
-            #half = shape[0]//2
-
-            #test_image = test_image[half:, :]
-            #s_binary = s_binary[half:, :]
 
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hls.png'
             save_before_and_after_image(
