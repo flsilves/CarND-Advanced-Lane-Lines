@@ -101,7 +101,7 @@ class SobelFilter:
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled
 
-    def filter_dir(self, sx, sy, thresholds=[0.8, 1.2]):
+    def filter_dir(self, sx, sy, thresholds=[0.7, 1.3]):
         """ Filter gray image by direction (rad) """
         sobel = np.arctan2(np.absolute(sy), np.absolute(sx))
         binary = Transform.to_binary(sobel, thresholds)

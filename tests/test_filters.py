@@ -176,7 +176,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, s_binary, filename, 'gray')
 
-    def xtest_combined(self):
+    def test_combined(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
