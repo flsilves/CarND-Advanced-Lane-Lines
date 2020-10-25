@@ -115,8 +115,43 @@ def fit_polynomial(binary_warped):
     out_img[lefty, leftx] = [255, 0, 0]
     out_img[righty, rightx] = [0, 0, 255]
 
-    # Plots the left and right polynomials on the lane lines
-    plt.plot(left_fitx, ploty, color='yellow')
-    plt.plot(right_fitx, ploty, color='yellow')
+    draw_polyfit(out_img, left_fit)
+    draw_polyfit(out_img, right_fit)
+
+    left_curverad, right_curverad = measure_curvature_real(
+        ploty, left_fit, right_fit)
+    print(left_curverad, right_curverad)
 
     return out_img, histogram
+
+
+def draw_polyfit(image, fit):
+    try:
+        py = list(range(image.shape[0]))
+        px = np.polyval(fit, py)
+        points = (np.asarray([px, py]).T).astype(np.int32)
+        cv2.polylines(image, [points], False,
+                      color=(255, 255, 0), thickness=5)
+    except TypeError:
+        print("The function failed to fit a line!")
+
+
+def measure_curvature_real(ploty, left_fit_cr, right_fit_cr):
+    '''
+    Calculates the curvature of polynomial functions in meters.
+    '''
+    # Define conversions in x and y from pixels space to meters
+    ym_per_pix = 30/720  # meters per pixel in y dimension
+    xm_per_pix = 3.7/700  # meters per pixel in x dimension
+
+    # Define y-value where we want radius of curvature
+    # We'll choose the maximum y-value, corresponding to the bottom of the image
+    y_eval = np.max(ploty)
+
+    # Calculation of R_curve (radius of curvature)
+    left_curverad = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix +
+                           left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
+    right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix +
+                            right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
+
+    return left_curverad, right_curverad

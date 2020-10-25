@@ -45,8 +45,8 @@ class WarpMachine:
         warped = cv2.warpPerspective(
             image, self.M, img_size, flags=cv2.INTER_LINEAR)
 
-        warped[:, 0:200] = 0
-        warped[:, -200:] = 0
+        warped[:, 0:180] = 0
+        warped[:, -180:] = 0
 
         #warped[:, :-100] = 0
 
