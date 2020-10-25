@@ -66,7 +66,10 @@ class LaneTracker():
         ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
             warped)
 
+        overlay = draw_overlay(
+            undistorted_image, warped, warper.Minv, ploty, left_fitx, right_fitx)
+
         # vis_overlay = draw_overlay(
         #    undistorted_image, warped, warper.Minv, ploty, left_fitx, right_fitx)
 
-        return vis_img
+        return overlay
