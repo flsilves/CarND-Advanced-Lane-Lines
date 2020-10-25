@@ -61,7 +61,7 @@ class HLSFilter:
 
         half = shape[0]//2
 
-        thresholds[0] = 3*np.median(s_channel[half:, :])
+        thresholds[0] = 5*np.median(s_channel[half:, :])
 
         s_binary = Transform.to_binary(s_channel, thresholds)
         return s_binary, s_channel
@@ -79,7 +79,7 @@ class SobelFilter:
         scaled = Transform.scale(sobel, bits=8)
 
         half = scaled.shape[0]//2
-        thresholds[0] = 4*np.median(scaled[half:, :])
+        thresholds[0] = 10*np.median(scaled[half:, :])
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
@@ -88,7 +88,7 @@ class SobelFilter:
         sobel = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=self.kernel_size)
         scaled = Transform.scale(sobel, bits=8)
         half = scaled.shape[0]//2
-        thresholds[0] = 4*np.median(scaled[half:, :])
+        thresholds[0] = 12*np.median(scaled[half:, :])
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled, sobel
 
@@ -97,11 +97,11 @@ class SobelFilter:
         sobel_magnitude = np.sqrt(sx ** 2 + sy ** 2)
         scaled = Transform.scale(sobel_magnitude, bits=8)
         half = scaled.shape[0]//2
-        thresholds[0] = 2*np.median(scaled[half:, :])
+        thresholds[0] = 15*np.median(scaled[half:, :])
         binary = Transform.to_binary(scaled, thresholds)
         return binary, scaled
 
-    def filter_dir(self, sx, sy, thresholds=[0.7, 1.3]):
+    def filter_dir(self, sx, sy, thresholds=[0.8, 1.2]):
         """ Filter gray image by direction (rad) """
         sobel = np.arctan2(np.absolute(sy), np.absolute(sx))
         binary = Transform.to_binary(sobel, thresholds)
@@ -110,6 +110,8 @@ class SobelFilter:
     def filter(self, image):
         """ Complete sobel filter, input: BGR image """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        gray = cv2.GaussianBlur(gray, ksize=(3, 3), sigmaX=0)
 
         sx_binary, sx_scaled, sobel_x = self.filter_x(gray)
         sy_binary, sy_scaled, sobel_y = self.filter_y(gray)

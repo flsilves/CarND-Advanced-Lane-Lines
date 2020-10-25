@@ -30,7 +30,7 @@ class FilterTests(unittest.TestCase):
     def tearDown(self):
         return
 
-    def xtest_sobel_y(self):
+    def test_sobel_y(self):
 
         logging.info('Applying sobel_y on road images')
 
@@ -47,7 +47,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def xtest_sobel_x(self):
+    def test_sobel_x(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -63,7 +63,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def xtest_sobel_dir(self):
+    def test_sobel_dir(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -113,7 +113,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 undistorted_image, thresh_sauvola, filename)
 
-    def xtest_sobel_xy_mag(self):
+    def test_sobel_xy_mag(self):
         logging.info('Applying sobel dir on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -141,7 +141,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, sobel_md_binary, filename, 'gray')
 
-    def xtest_sobel(self):
+    def test_sobel(self):
         logging.info('Apply sobel and hls filter')
 
         for idx, test_image in enumerate(self.test_images):
@@ -155,7 +155,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, binary, filename, 'gray')
 
-    def xtest_s_filter(self):
+    def test_s_filter(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
@@ -176,7 +176,7 @@ class FilterTests(unittest.TestCase):
             save_before_and_after_image(
                 test_image, s_binary, filename, 'gray')
 
-    def test_combined(self):
+    def xtest_combined(self):
         logging.info('Applying sobel_y on road images')
 
         for idx, test_image in enumerate(self.test_images):
