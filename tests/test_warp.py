@@ -96,6 +96,24 @@ class WarpTest(unittest.TestCase):
             # Combine the result with the original image
             result = cv2.addWeighted(test_image, 1, newwarp, 0.3, 0)
 
+            #pos_str = "Left" if pos < 0 else "Right"
+            crl_text = "Radius of curvature (left) = %.1f km" % (1000 / 1000)
+            crr_text = "Radius of curvature (right) = %.1f km" % (1000 / 1000)
+            # cr_text = "Radius of curvature (avg) = %.1f km" % (
+            #    (left_cr + right_cr) / 2000)
+            # pos_text = "Vehicle is %.1f m %s from the lane center" % (
+            #    np.abs(pos), pos_str)
+
+            def put_text(image, text, color=(255, 255, 255), ypos=100):
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(image, text, (100, ypos),
+                            font, 1, color, thickness=2)
+
+            put_text(result, crl_text, ypos=50)
+            put_text(result, crr_text, ypos=100)
+            #put_text(vis_overlay, cr_text, ypos=150)
+            #put_text(vis_overlay, pos_text, ypos=200)
+
             filename = f'{TEST_OUTPUT_DIR}/{self.filenames[idx]}_hist.png'
             plot_histogram(
                 bottom_half, histogram, filename, 'gray')
