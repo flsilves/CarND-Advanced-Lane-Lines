@@ -8,8 +8,8 @@ import logging
 class LineFit():
 
     def __init__(self, imshape):
-        self.left_fit = None
-        self.right_fit = None
+        self.left_poly = None
+        self.right_poly = None
         self.imshape = imshape
 
     def fit_poly(self, leftx, lefty, rightx, righty):
@@ -34,9 +34,9 @@ class LineFit():
 
         return left_fitx, right_fitx, ploty
 
-    def search_around_poly(self, binary_warped, left_fit, right_fit):
+    def find_lane_pixels_poly(self, binary_warped, left_fit, right_fit):
         """ Find pixels near two polynomials for left and right line"""
-        margin = 100
+        margin = 50
 
         nonzero = binary_warped.nonzero()
         nonzeroy = np.array(nonzero[0])
@@ -55,18 +55,20 @@ class LineFit():
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds]
 
-        # Fit new polynomials
-        left_fitx, right_fitx, ploty = self.fit_poly(
-            binary_warped.shape, leftx, lefty, rightx, righty)
+        self.left_poly, self.right_poly = self.fit_poly(
+            leftx, lefty, rightx, righty)
+
+        left_fitx, right_fitx, ploty = self.generate_x_y_from_poly(
+            self.left_poly, self.right_poly)
 
         ## Visualization ##
         # Create an image to draw on and an image to show the selection window
-        out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-        window_img = np.zeros_like(out_img)
+        vis_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+        window_img = np.zeros_like(vis_img)
         # Color in left and right line pixels
-        out_img[nonzeroy[left_lane_inds],
+        vis_img[nonzeroy[left_lane_inds],
                 nonzerox[left_lane_inds]] = [255, 0, 0]
-        out_img[nonzeroy[right_lane_inds],
+        vis_img[nonzeroy[right_lane_inds],
                 nonzerox[right_lane_inds]] = [0, 0, 255]
 
         # Generate a polygon to illustrate the search window area
@@ -85,16 +87,16 @@ class LineFit():
         # Draw the lane onto the warped blank image
         cv2.fillPoly(window_img, np.int_([left_line_pts]), (0, 255, 0))
         cv2.fillPoly(window_img, np.int_([right_line_pts]), (0, 255, 0))
-        result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
+        vis_img = cv2.addWeighted(vis_img, 1, window_img, 0.3, 0)
 
         # Plot the polynomial lines onto the image
         # plt.plot(left_fitx, ploty, color='yellow')
         # plt.plot(right_fitx, ploty, color='yellow')
         ## End visualization steps ##
 
-        return result
+        return leftx, lefty, rightx, righty, vis_img, None
 
-    def find_lane_pixels(self, binary_warped):
+    def find_lane_pixels_histogram(self, binary_warped):
         """ Find Lane pixels based on histogram of half bottom of a warped image """
         # Take a histogram of the bottom half of the image
         histogram = np.sum(
@@ -130,7 +132,7 @@ class LineFit():
         right_lane_inds = []
 
         # Step through the windows one by one
-        for window in range(self.nwindows):
+        for window in range(nwindows):
             # Identify window boundaries in x and y (and right and left)
             win_y_low = binary_warped.shape[0] - (window+1)*window_height
             win_y_high = binary_warped.shape[0] - window*window_height
@@ -177,22 +179,29 @@ class LineFit():
 
         return leftx, lefty, rightx, righty, vis_img, histogram
 
-    def fit_polynomial(self, binary_warped):
-        """ Get points from left and right lines """
-        # Find our lane pixels first
-        leftx, lefty, rightx, righty, vis_img, histogram = self.find_lane_pixels(
-            binary_warped)
+    def find_lines(self, binary_warped, previous_left_poly=None, previous_right_poly=None):
+        """ Find lane lines based on histogram of bottom half image """
 
-        left_fitx, right_fitx, ploty = self.fit_poly(
-            binary_warped.shape, leftx, lefty, rightx, righty)
+        if (previous_left_poly is None) or (previous_right_poly is None):
+            leftx, lefty, rightx, righty, vis_img, histogram = self.find_lane_pixels_histogram(
+                binary_warped)
+        else:
+            leftx, lefty, rightx, righty, vis_img, histogram = self.find_lane_pixels_poly(
+                binary_warped, previous_left_poly, previous_right_poly)
+
+        self.left_poly, self.right_poly = self.fit_poly(
+            leftx, lefty, rightx, righty)
+
+        left_fitx, right_fitx, ploty = self.generate_x_y_from_poly(
+            self.left_poly, self.right_poly)
 
         vis_img[lefty, leftx] = [255, 0, 0]
         vis_img[righty, rightx] = [0, 0, 255]
 
-        self.draw_polyline(vis_img, self.left_fit)
-        self.draw_polyline(vis_img, self.right_fit)
+        self.draw_polyline(vis_img, self.left_poly)
+        self.draw_polyline(vis_img, self.right_poly)
 
-        return ploty, left_fitx, right_fitx, histogram, vis_img
+        return ploty, left_fitx, right_fitx, vis_img, histogram
 
     def draw_polyline(self, image, fit):
         """ Draw polyline on image """
@@ -203,7 +212,7 @@ class LineFit():
             cv2.polylines(image, [points], False,
                           color=(255, 255, 0), thickness=5)
         except TypeError:
-            print("The function failed to fit a line!")
+            logging.warning("The function failed to fit a line!")
 
     def measure_curvature_real(self, ploty):
         '''
@@ -214,8 +223,8 @@ class LineFit():
         ym_per_pix = 30/720  # meters per pixel in y dimension
         xm_per_pix = 3.7/700
 
-        left_fit_cr = self.left_fit
-        right_fit_cr = self.right_fit
+        left_fit_cr = self.left_poly
+        right_fit_cr = self.right_poly
 
         # Define y-value where we want radius of curvature
         # We'll choose the maximum y-value, corresponding to the bottom of the image

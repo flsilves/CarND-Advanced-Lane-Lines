@@ -72,7 +72,7 @@ class TestTracking(unittest.TestCase):
             line_fit = LineFit(
                 undistorted_image.shape)
 
-            ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
+            ploty, left_fitx, right_fitx, vis_img, histogram = line_fit.find_lines(
                 warped)
 
             left_curvature_m, right_curvature_m = line_fit.measure_curvature_real(

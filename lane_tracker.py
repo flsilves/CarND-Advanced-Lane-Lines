@@ -40,8 +40,8 @@ class LaneTracker():
 
     def __init__(self, calibration_images, calibration_file):
 
-        # self.left_line = Line()
-        # self.right_line = Line()
+        self.left_line = Line()
+        self.right_line = Line()
         self.filter = CombinedFilter()
         # self.warper = Warper()
         self.camera = Camera(nx=9, ny=6, calibration_images=calibration_images,
@@ -65,8 +65,16 @@ class LaneTracker():
 
         line_fit = LineFit(image.shape)
 
-        ploty, left_fitx, right_fitx, histogram, vis_img = line_fit.fit_polynomial(
-            warped)
+        if not self.left_line.detected:
+            ploty, left_fitx, right_fitx, vis_img, hist = line_fit.find_lines(
+                warped)
+        else:
+            ploty, left_fitx, right_fitx, vis_img, hist = line_fit.find_lines(
+                warped, self.left_line.current_fit, self.right_line.current_fit)
+
+        self.left_line.detected = True
+        self.left_line.current_fit = line_fit.left_poly
+        self.right_line.current_fit = line_fit.right_poly
 
         left_curvature, right_curvature = line_fit.measure_curvature_real(
             ploty)
