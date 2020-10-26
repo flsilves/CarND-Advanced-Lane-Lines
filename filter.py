@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
 
 
 class Transform(object):
@@ -61,7 +62,13 @@ class HLSFilter:
 
         half = shape[0]//2
 
-        thresholds[0] = 5*np.median(s_channel[half:, :])
+        median = np.median(s_channel[half:, :])
+        mean = np.mean(s_channel[half:, :])
+
+        thresholds[0] = 3*mean
+
+        logging.info(f'Median {median}')
+        logging.info(f'Mean {mean}')
 
         s_binary = Transform.to_binary(s_channel, thresholds)
         return s_binary, s_channel

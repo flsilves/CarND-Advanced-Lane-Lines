@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 
 class Warper:
     h = 720
-    left = 210
+    left = 210  # + 10
     right = 1110
-    top = 460
-    top_left = 580
-    top_right = 705
+    top = 460  # + 20
+    top_left = 580  # - 30
+    top_right = 705  # + 30
     dst_l = 320
     dst_r = 960
 
@@ -46,8 +46,8 @@ class Warper:
             image, self.M, img_size, flags=cv2.INTER_LINEAR)
 
         # crop overly distorted area
-        warped[:, 0:180] = 0
-        warped[:, -180:] = 0
+        warped[:, 0:160] = 0
+        warped[:, -160:] = 0
 
         #warped[:, :-100] = 0
 

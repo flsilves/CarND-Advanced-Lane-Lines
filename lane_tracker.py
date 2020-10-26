@@ -3,6 +3,8 @@ import logging
 import numpy as np
 import glob
 from moviepy.editor import VideoFileClip
+import matplotlib.pyplot as plt
+
 
 from camera import Camera, Warper
 from filter import CombinedFilter
@@ -41,7 +43,7 @@ class LaneTracker():
         # self.left_line = Line()
         # self.right_line = Line()
         self.filter = CombinedFilter()
-        #self.warper = Warper()
+        # self.warper = Warper()
         self.camera = Camera(nx=9, ny=6, calibration_images=calibration_images,
                              calibration_filename=calibration_file)
 
@@ -72,7 +74,13 @@ class LaneTracker():
         overlay = draw_overlay(
             undistorted_image, warped, warper.Minv, ploty, left_fitx, right_fitx, left_curvature, right_curvature)
 
-        # vis_overlay = draw_overlay(
-        #    undistorted_image, warped, warper.Minv, ploty, left_fitx, right_fitx)
+        warped = np.dstack((warped*255, warped*255, warped*255))
 
-        return overlay
+        binary_filtered = np.dstack(
+            (binary_filtered*255, binary_filtered*255, binary_filtered*255))
+
+        im_top = cv2.hconcat([overlay, vis_img])
+        im_bottom = cv2.hconcat([binary_filtered, warped])
+
+        im_v = cv2.vconcat([im_top, im_bottom])
+        return im_v
