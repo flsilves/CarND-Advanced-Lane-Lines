@@ -36,7 +36,8 @@ class LineFit():
 
     def find_lane_pixels_poly(self, binary_warped, left_fit, right_fit):
         """ Find pixels near two polynomials for left and right line"""
-        margin = 50
+        logging.debug("Using Poly")
+        margin = 75
 
         nonzero = binary_warped.nonzero()
         nonzeroy = np.array(nonzero[0])
@@ -97,10 +98,12 @@ class LineFit():
         return leftx, lefty, rightx, righty, vis_img, None
 
     def find_lane_pixels_histogram(self, binary_warped):
+        logging.debug("Using Histogram")
+
         """ Find Lane pixels based on histogram of half bottom of a warped image """
         # Take a histogram of the bottom half of the image
         histogram = np.sum(
-            binary_warped[binary_warped.shape[0]//2:, :], axis=0)
+            binary_warped[binary_warped.shape[0]//4:, :], axis=0)
         # Create an output image to draw on and visualize the result
         vis_img = np.dstack((binary_warped, binary_warped, binary_warped))
         # Find the peak of the left and right halves of the histogram
@@ -177,6 +180,11 @@ class LineFit():
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds]
 
+        # plt.figure()
+        #plt.imshow(binary_warped[binary_warped.shape[0]//4:, :])
+        # plt.plot(histogram)
+        # plt.show()
+
         return leftx, lefty, rightx, righty, vis_img, histogram
 
     def find_lines(self, binary_warped, previous_left_poly=None, previous_right_poly=None):
@@ -229,7 +237,6 @@ class LineFit():
         # Define y-value where we want radius of curvature
         # We'll choose the maximum y-value, corresponding to the bottom of the image
         y_eval = np.max(ploty)
-        print(y_eval)
 
         # Calculation of R_curve (radius of curvature)
         left_curvature = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix +

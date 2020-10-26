@@ -62,13 +62,13 @@ class HLSFilter:
 
         half = shape[0]//2
 
-        median = np.median(s_channel[half:, :])
+        #median = np.median(s_channel[half:, :])
         mean = np.mean(s_channel[half:, :])
 
         thresholds[0] = 3*mean
 
-        logging.info(f'Median {median}')
-        logging.info(f'Mean {mean}')
+        #logging.info(f'Median {median}')
+        #logging.info(f'Mean {mean}')
 
         s_binary = Transform.to_binary(s_channel, thresholds)
         return s_binary, s_channel

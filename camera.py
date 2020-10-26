@@ -46,8 +46,8 @@ class Warper:
             image, self.M, img_size, flags=cv2.INTER_LINEAR)
 
         # crop overly distorted area
-        warped[:, 0:160] = 0
-        warped[:, -160:] = 0
+        warped[:, 0:240] = 0
+        warped[:, -240:] = 0
 
         #warped[:, :-100] = 0
 
