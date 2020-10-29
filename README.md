@@ -1,39 +1,127 @@
-## Advanced Lane Finding
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-![Lanes Image](./examples/example_output.jpg)
+# **Advanced Lane Finding** 
 
-In this project, your goal is to write a software pipeline to identify the lane boundaries in a video, but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
 
-Creating a great writeup:
+[//]: # (Image References)
+
+[image1]: ./writeup_images/calibration3_undistort.png "chessboard_undistort"
+[image2]: ./writeup_images/test4_undistort.png "road_undistort"  
+[image3]: ./writeup_images/test5_sobel_final.png "filter_sobel"
+[image4]: ./writeup_images/test5_hls.png "filter_hls"
+[image5]: ./writeup_images/test5_final.png "filter_final"
+[image6]: ./writeup_images/straight_lines1_warp.png "warp"
+[image7]: ./writeup_images/test4_poly.png "histogram_poly"
+[image8]: ./writeup_images/test4_hist.png "histogram"  
+[image9]: ./writeup_images/test6_overlay.png "final_overlay"
+
+
+
+## Camera Calibration
+
+The camera calibration was made using the chessboard images along with the opencv functions presented in the course material.   
+  
+`cv2.findChessboardCorners()` failed to find corners in the following images: 
+
+```
+Unable to find corners in: ../camera_cal/calibration1.jpg
+Unable to find corners in: ../camera_cal/calibration4.jpg
+Unable to find corners in: ../camera_cal/calibration5.jpg
+```  
+
+`calibration4.jpg` has one missing corner, the remaining ones probably have the chessboard overly cropped.  
+
+#### Undistortion examples:
+
+![alt text][image1]
+
+![alt text][image2]
+
+
+## Pipeline (images)
+
+
+
+### Filter to binary  
+
+`filter.py` is the module used to filter the images in order to identify lane-lines.
+
+The filter used is a combination of gradient (using sobel) and color (using saturation channel).
+  
+Sobel filter: `(X & Y) | (DIR & MAG)` Pretty much what was covered on the course. The thresholds are based on the mean values of each sobel component.
+  
+Saturation filter: `s_channel > low_threshold ` The threshold is simply the mean of the saturation values of the half bottom of the image (where the road is usually located) multiplied by constant. This helps to adapt to different frames with different exposure levels.   
+
+##### - Sobel filter:  
+![alt text][image3]
+
+##### - Saturation filter:  
+![alt text][image4]
+
+##### - Combined filter:  
+![alt text][image5]
+
 ---
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
+### Perspective Transform  
+  
+Class `Warper` is used to perform the perspective transform, the image with straight lines was used to define a source polygon (green in the image below) that would match a straight line from a birds-view perspective.  
+  
+![alt text][image6]   
 
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
+Note: The polygon is hardcoded, so it doesn't adapt to road slope, that's very noticeable on the challenge/harder videos and a limitation. 
 
-The Project
----
+### Finding Lane-lines  
+  
+`line_fit.py`is used to identify the pixels belonging to the left and right lane, if there's no previous detection a sliding windows approach is used with an histogram to idenfity the first windows.
+  
+![alt text][image7]
+![alt text][image8]
 
-The goals / steps of this project are the following:
+If there's previous detections the area around the last lane-lines are used to search for the lane-line's pixels.
 
-* Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
-* Apply a distortion correction to raw images.
-* Use color transforms, gradients, etc., to create a thresholded binary image.
-* Apply a perspective transform to rectify binary image ("birds-eye view").
-* Detect lane pixels and fit to find the lane boundary.
-* Determine the curvature of the lane and vehicle position with respect to center.
-* Warp the detected lane boundaries back onto the original image.
-* Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
+### Curvature and position  
+  
+`measure_curvature_real()` is used to calculate the curvature of each lane-line, based on the calculated polynomials
 
-The images for camera calibration are stored in the folder called `camera_cal`.  The images in `test_images` are for testing your pipeline on single frames.  If you want to extract more test images from the videos, you can simply use an image writing method like `cv2.imwrite()`, i.e., you can read the video in frame by frame as usual, and for frames you want to save for later you can write to an image file.  
+`ego_distance_from_center()` calculates the distance from the center of the image to the center of the lane (at the very bottom of the image)  
+  
+The polynomials are adjusted to meters from pixels based on the ratios provided in the course.
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `output_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+The values displayed on the video are averaged out accross several frames to avoid sudden jumps.
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
+### Lane identification  
+    
+Final result with the lane space fitted in the original image:
+  
+  ![alt text][image9]
 
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
+## Pipeline (video)
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+
+Aditional logic to validate the detection of lines was added, based on the normalized residuals of the polynomial fit.  
+  
+If the algorithm fails to detect lines for several frames the `sliding_window` approach is used instead. If there's a successfull detection then the area around the last detection is used.   
+
+#### Links to the result videos:
+  
+[project\_video\_output.mp4](https://github.com/flsilves/CarND-Advanced-Lane-Lines/blob/master/linked_videos/project_video_output.mp4)
+
+
+[project\_video\_output\_debug.m4v](https://github.com/flsilves/CarND-Advanced-Lane-Lines/blob/master/linked_videos/project_video_output_debug.m4v) (2x2 panel with the different stages of the pipeline)
+
+
+## Discussion (video)
+  
+#### Shortcomings:  
+    
+  - The warped process is hardcoded, sometimes when the car hits a bump or the road slope increases/descreases the lines don't appear straight anymore. Also sometimes the lines of interest are out of the warped region.  
+
+  - Detection of the lines could be done in separate for the left and right, currently if the fitting fails for one it counts as an invalid detection.  
+   
+  - A better technique for evaluating the detection of lines could be used, instead of the residuals of the polyfit. Similiarity with the previous detected lines could be an alternative.  
+  
+  - Dashed lines are sometimes a problem because the fitting is strongly affected by single pixels on the extremes of the image when there's no lane markings on it.  
+  
+  - Averaging of the detected lines could be done to smooth some jumps in the video, however averaging 2nd degree polynomials is not trivial.   
+  
+  - The algorithm struggles when there's multiple lines close to the center, for example road boundaries, separation walls, and so on. More robust logic should be used to identify the car's lane. 
 
