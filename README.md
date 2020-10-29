@@ -63,7 +63,7 @@ Saturation filter: `s_channel > low_threshold ` The threshold is simply the mean
 
 ### Perspective Transform  
   
-Class `Warper` is used to perform the perspective transform, the image with straight lines was used to define a source polygon (green in the image below) that would match a straight line from a birds-view perspective.  
+Class `Warper` is used to perform the perspective transform, the image with straight lines was used to define a source polygon (green in the image below) that would match a straight line from a bird's-view perspective.  
   
 ![alt text][image6]   
 
@@ -76,13 +76,13 @@ Note: The polygon is hardcoded, so it doesn't adapt to road slope, that's very n
 ![alt text][image7]
 ![alt text][image8]
 
-If there's previous detections the area around the last lane-lines are used to search for the lane-line's pixels.
+If there's previous detections the area around the last lines are used to search for the pixels.
 
 ### Curvature and position  
   
-`measure_curvature_real()` is used to calculate the curvature of each lane-line, based on the calculated polynomials
+`measure_curvature_real()` is used to calculate the curvature of each lane-line, based on the calculated polynomials.
 
-`ego_distance_from_center()` calculates the distance from the center of the image to the center of the lane (at the very bottom of the image)  
+`ego_distance_from_center()` calculates the distance from the center of the image to the center of the lane (at the very bottom of the image).
   
 The polynomials are adjusted to meters from pixels based on the ratios provided in the course.
 
@@ -113,15 +113,15 @@ If the algorithm fails to detect lines for several frames the `sliding_window` a
   
 #### Shortcomings:  
     
-  - The warped process is hardcoded, sometimes when the car hits a bump or the road slope increases/descreases the lines don't appear straight anymore. Also sometimes the lines of interest are out of the warped region.  
+  - The warped process is hardcoded, sometimes when the car hits a bump or the road slope increases/descreases the lines don't appear straight anymore. Also, sometimes the lines of interest are out of the warped region.  
 
   - Detection of the lines could be done in separate for the left and right, currently if the fitting fails for one it counts as an invalid detection.  
    
-  - A better technique for evaluating the detection of lines could be used, instead of the residuals of the polyfit. Similiarity with the previous detected lines could be an alternative.  
+  - A better technique for evaluating the detection of lines could be used, instead of the residuals of the polyfit. Similarity with the previous detected lines could be an alternative.  
   
   - Dashed lines are sometimes a problem because the fitting is strongly affected by single pixels on the extremes of the image when there's no lane markings on it.  
   
-  - Averaging of the detected lines could be done to smooth some jumps in the video, however averaging 2nd degree polynomials is not trivial.   
+  - Averaging of the detected lines could be done to smooth some jumps in the video, however, averaging 2nd degree polynomials is not trivial.   
   
   - The algorithm struggles when there's multiple lines close to the center, for example road boundaries, separation walls, and so on. More robust logic should be used to identify the car's lane. 
 
